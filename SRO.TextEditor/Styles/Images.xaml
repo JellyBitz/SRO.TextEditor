@@ -1,0 +1,15 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ImageBrush x:Key="img-guide-background" ImageSource="/SRO.TextEditor;component/Resources/images/gd_paper.png" Stretch="Fill"/>
+    <ImageBrush x:Key="img-guide-button-up" ImageSource="/SRO.TextEditor;component/Resources/images/gd_scroll_up.png" Stretch="Fill"/>
+    <ImageBrush x:Key="img-guide-button-up-hover" ImageSource="/SRO.TextEditor;component/Resources/images/gd_scroll_up_focus.png" Stretch="Fill"/>
+    <ImageBrush x:Key="img-guide-button-up-pressed" ImageSource="/SRO.TextEditor;component/Resources/images/gd_scroll_up_press.png" Stretch="Fill"/>
+    <ImageBrush x:Key="img-guide-button-down" ImageSource="/SRO.TextEditor;component/Resources/images/gd_scroll_down.png" Stretch="Fill"/>
+    <ImageBrush x:Key="img-guide-button-down-hover" ImageSource="/SRO.TextEditor;component/Resources/images/gd_scroll_down_focus.png" Stretch="Fill"/>
+    <ImageBrush x:Key="img-guide-button-down-pressed" ImageSource="/SRO.TextEditor;component/Resources/images/gd_scroll_down_press.png" Stretch="Fill"/>
+    <ImageBrush x:Key="img-guide-button-thumb" ImageSource="/SRO.TextEditor;component/Resources/images/gd_scroll_button.png" Stretch="Fill"/>
+    <ImageBrush x:Key="img-guide-button-thumb-hover" ImageSource="/SRO.TextEditor;component/Resources/images/gd_scroll_button_focus.png" Stretch="Fill"/>
+    <ImageBrush x:Key="img-guide-button-thumb-pressed" ImageSource="/SRO.TextEditor;component/Resources/images/gd_scroll_button_press.png" Stretch="Fill"/>
+    <ImageBrush x:Key="img-guide-scroll-background" ImageSource="/SRO.TextEditor;component/Resources/images/gd_scroll_line.png" Stretch="None"/>
+
+</ResourceDictionary>

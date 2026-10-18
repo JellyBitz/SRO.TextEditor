@@ -1,0 +1,9 @@
+# Visual Studio cache
+.vs/
+
+# Visual studio Packages
+packages/
+
+# Debugging data generated
+SRO.TextEditor/bin/
+SRO.TextEditor/obj/

@@ -1,0 +1,3 @@
+[submodule "SRO.TextEditor/Resources/submodules/SRO.PK2API"]
+	path = SRO.TextEditor/Resources/submodules/SRO.PK2API
+	url = https://github.com/JellyBitz/SRO.PK2API.git

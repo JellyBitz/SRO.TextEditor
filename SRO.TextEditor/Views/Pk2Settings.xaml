@@ -1,0 +1,82 @@
+﻿<hc:Window x:Class="SRO.TextEditor.Views.Pk2Settings"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        xmlns:local="clr-namespace:SRO.TextEditor"
+        mc:Ignorable="d"
+        Width="360" Height="160"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <!-- Settings layout -->
+            <RowDefinition/>
+            <RowDefinition/>
+
+            <!-- Save / Cancel-->
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Path -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       Text="Path : " Style="{StaticResource TextBlockBaseStyle}"
+                       HorizontalAlignment="Right"/>
+            <TextBox Grid.Column="1"
+                     x:Name="tbxMediaPath"
+                     Style="{StaticResource TextBoxExtend}"
+                     Text="{Binding MediaPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     VerticalAlignment="Center"
+                     hc:InfoElement.Placeholder="C:\..\..\Media.pk2"/>
+            <Button Grid.Column="2"
+                    Style="{StaticResource ButtonIcon}"
+                    hc:IconElement.Geometry="{StaticResource icon-folder-search}"
+                    ToolTip="Search"
+                    Margin="5 0 0 0"
+                    Click="SearchButton_OnClick"/>
+        </Grid>
+        <!-- Key -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       Text="Key : " Style="{StaticResource TextBlockBaseStyle}"
+                       HorizontalAlignment="Right"/>
+            <TextBox Grid.Column="1"
+                     Style="{StaticResource TextBoxExtend}"
+                     Text="{Binding MediaKey}"
+                     VerticalAlignment="Center"
+                     hc:InfoElement.Placeholder="169841"/>
+        </Grid>
+        
+        <!-- Save / Cancel -->
+        <Grid Grid.Row="4"
+              Margin="100 10 100 5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0"
+                    Style="{StaticResource ButtonPrimary}"
+                    Content="Save"
+                    Command="{Binding SaveCommand}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"/>
+            <Button Grid.Column="1"
+                    Style="{StaticResource ButtonDefault}"
+                    Content="Cancel"
+                    Command="{Binding CancelCommand}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"/>
+        </Grid>
+        
+    </Grid>
+</hc:Window>

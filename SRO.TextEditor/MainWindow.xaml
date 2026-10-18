@@ -1,0 +1,470 @@
+﻿<hc:Window x:Class="SRO.TextEditor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        xmlns:htmlrender="clr-namespace:TheArtOfDev.HtmlRenderer.WPF;assembly=HtmlRenderer.WPF"
+        xmlns:local="clr-namespace:SRO.TextEditor"
+        xmlns:vm="clr-namespace:SRO.ViewModels"
+        mc:Ignorable="d"
+        Width="1280" Height="720"
+        MinWidth="800" MinHeight="600"
+        Title="{Binding Title}"
+        WindowStyle="SingleBorderWindow"
+        WindowStartupLocation="CenterScreen"
+        Icon="/icon.ico">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <!-- Text Search / Editor -->
+            <ColumnDefinition Width="15*"/>
+            <!-- Text Preview -->
+            <ColumnDefinition Width="11*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Text Search / Editor -->
+        <Grid Grid.Column="0"
+              Margin="10">
+            <Grid.RowDefinitions>
+                <!-- Search -->
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="7*"/>
+                <!-- Editor -->
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="13*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Search -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="auto"/>
+                </Grid.ColumnDefinitions>
+                <!-- Search -->
+                <Grid Grid.Column="0"
+                      IsEnabled="{Binding CanConnect}">
+                    <hc:SearchBar Style="{StaticResource SearchBarPlus}"
+                                  hc:InfoElement.Placeholder="Search . . ."
+                                  Command="{Binding SearchCommand}"
+                                  CommandParameter="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                </Grid>
+                <!-- Search Type -->
+                <hc:ComboBox Grid.Column="1"
+                             Style="{StaticResource ComboBoxExtendBaseStyle}"
+                             ToolTip="Search Type"
+                             Margin="5 0 0 0"
+                             MinWidth="110"
+                             ItemsSource="{Binding SearchTypeOptions}"
+                             SelectedItem="{Binding SearchType}">
+                    <hc:ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="By "/>
+                                <TextBlock Text="{Binding}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </hc:ComboBox.ItemTemplate>
+                </hc:ComboBox>
+
+                <!-- Database Settings -->
+                <Button Grid.Column="2"
+                        Style="{StaticResource ButtonDefault}"
+                        hc:IconElement.Geometry="{StaticResource icon-database-settings}"
+                        ToolTip="Database Settings"
+                        Margin="5 0 0 0"
+                        Command="{Binding OpenDbSettingsCommand}"/>
+            </Grid>
+            <!-- Search > Results -->
+            <DataGrid Grid.Row="1"
+                      Style="{StaticResource DataGridBaseStyle}"
+                      RowStyle="{StaticResource DataGridRowStyle.Small}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      RowHeight="38"
+                      HeadersVisibility="All"
+                      CanUserSortColumns="False"
+                      GridLinesVisibility="None"
+                      SelectionMode="Single"
+                      ItemsSource="{Binding SearchResults}"
+                      SelectedItem="{Binding SelectedSearchResult}"
+                      HorizontalScrollBarVisibility="Disabled"
+                      CanUserReorderColumns="False"
+                      Margin="0 5"
+                      Padding="0">
+                <DataGrid.Columns>
+                    <!-- ID -->
+                    <DataGridTemplateColumn Header="ID"
+                                            IsReadOnly="True"
+                                            Width="65">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Id}">
+                                    <TextBlock.InputBindings>
+                                        <!-- Quick edit this -->
+                                        <MouseBinding Gesture="RightDoubleClick"
+                                                      Command="{Binding DataContext.EditSelectedResultCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                                    </TextBlock.InputBindings>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <!-- Codename -->
+                    <DataGridTemplateColumn Header="Codename"
+                                            IsReadOnly="True"
+                                            Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Codename}">
+                                    <TextBlock.InputBindings>
+                                        <!-- Quick edit this -->
+                                        <MouseBinding Gesture="RightDoubleClick"
+                                                      Command="{Binding DataContext.EditSelectedResultCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                                    </TextBlock.InputBindings>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <!-- Category -->
+                    <DataGridTemplateColumn Header="Category"
+                                            IsReadOnly="True"
+                                            Width="160">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Category}">
+                                    <TextBlock.InputBindings>
+                                        <!-- Quick edit this -->
+                                        <MouseBinding Gesture="RightDoubleClick"
+                                                      Command="{Binding DataContext.EditSelectedResultCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                                    </TextBlock.InputBindings>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <!-- Edit this -->
+                    <DataGridTemplateColumn Width="40" Header="">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Style="{StaticResource ButtonIcon}"
+                                        ToolTip="Edit" Padding="0"
+                                        hc:IconElement.Geometry="{StaticResource icon-download}"
+                                        Command="{Binding DataContext.EditSelectedResultCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}">
+                                </Button>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Editor > Codename -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <!-- Codename -->
+                    <ColumnDefinition Width="*"/>
+                    <!-- Category -->
+                    <ColumnDefinition Width="auto"/>
+                    <!-- Language -->
+                    <ColumnDefinition Width="auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Edit codename -->
+                <TextBox Grid.Column="0"
+                         Style="{StaticResource TextBoxExtend}"
+                         hc:InfoElement.Placeholder="Codename" ToolTip="Codename"
+                         Text="{Binding EditingCodename}"/>
+                <!-- Edit Category aka Database table -->
+                <hc:ComboBox Grid.Column="1"
+                             Style="{StaticResource ComboBoxExtendBaseStyle}"
+                             hc:InfoElement.Placeholder="Category" ToolTip="Category"
+                             ItemsSource="{Binding Categories}"
+                             SelectedValue="{Binding EditingCategory}"
+                             Margin="5 0 0 0"
+                             MinWidth="100"/>
+                <!-- Language code aka Database table columns-->
+                <hc:ComboBox Grid.Column="2"
+                             Style="{StaticResource ComboBoxExtendBaseStyle}"
+                             hc:InfoElement.Placeholder="Language" ToolTip="Language"
+                             ItemsSource="{Binding Languages}"
+                             SelectedValue="{Binding EditingLanguage}"
+                             Margin="5 0 0 0"
+                             MinWidth="100"/>
+            </Grid>
+            <!-- Editor > Text -->
+            <Grid Grid.Row="3" Margin="0 5 0 0">
+                <Grid.RowDefinitions>
+                    <!-- Text edit -->
+                    <RowDefinition/>
+                    <!-- Text options, sml2 tags, etc.. -->
+                    <RowDefinition Height="auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Text -->
+                <TextBox Grid.Column="0"
+                         x:Name="tbxEditor"
+                         Style="{StaticResource TextBoxExtend}"
+                         TextWrapping="NoWrap"
+                         AcceptsReturn="True"
+                         VerticalContentAlignment="Top"
+                         Padding="10 10 15 10"
+                         FontSize="12"
+                         Text="{Binding EditingText, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <!-- Options -->
+                <Grid Grid.Row="1" Margin="0 5 0 0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Bold -->
+                    <Button Grid.Column="0"
+                            ToolTip="Bold"
+                            hc:IconElement.Geometry="{StaticResource icon-format-bold}"
+                            hc:BorderElement.CornerRadius="4 0 0 4"
+                            Focusable="False">
+                        <Button.InputBindings>
+                            <MouseBinding MouseAction="LeftClick"
+                                          Command="{Binding MakeTextBoldCommand}"
+                                          CommandParameter="{Binding ElementName=tbxEditor}"/>
+                            <MouseBinding MouseAction="RightClick"
+                                          Command="{Binding ClearTextBoldCommand}"
+                                          CommandParameter="{Binding ElementName=tbxEditor}"/>
+                        </Button.InputBindings>
+                    </Button>
+                    <!-- Breakline -->
+                    <Button Grid.Column="1"
+                            ToolTip="Breakline"
+                            hc:IconElement.Geometry="{StaticResource icon-format-breakline}"
+                            hc:BorderElement.CornerRadius="0 4 4 0"
+                            Focusable="False">
+                        <Button.InputBindings>
+                            <MouseBinding MouseAction="LeftClick"
+                                          Command="{Binding MakeBreaklineCommand}"
+                                          CommandParameter="{Binding ElementName=tbxEditor}"/>
+                            <MouseBinding MouseAction="RightClick"
+                                          Command="{Binding ClearBreaklineCommand}"
+                                          CommandParameter="{Binding ElementName=tbxEditor}"/>
+                        </Button.InputBindings>
+                    </Button>
+
+                    <!-- Text Align -->
+                    <StackPanel Grid.Column="2"
+                                Margin="2 0 0 0"
+                                Orientation="Horizontal">
+                        <Button ToolTip="Align to the Left"
+                                hc:IconElement.Geometry="{StaticResource icon-format-align-left}"
+                                hc:BorderElement.CornerRadius="4 0 0 4">
+                            <Button.InputBindings>
+                                <MouseBinding MouseAction="LeftClick"
+                                              Command="{Binding MakeTextAlignLeftCommand}"
+                                              CommandParameter="{Binding ElementName=tbxEditor}"/>
+                                <MouseBinding MouseAction="RightClick"
+                                              Command="{Binding ClearTextAlignLeftCommand}"
+                                              CommandParameter="{Binding ElementName=tbxEditor}"/>
+                            </Button.InputBindings>
+                        </Button>
+                        <Button ToolTip="Align to the center"
+                                hc:IconElement.Geometry="{StaticResource icon-format-align-center}"
+                                hc:BorderElement.CornerRadius="0">
+                            <Button.InputBindings>
+                                <MouseBinding MouseAction="LeftClick"
+                                              Command="{Binding MakeTextAlignCenterCommand}"
+                                              CommandParameter="{Binding ElementName=tbxEditor}"/>
+                                <MouseBinding MouseAction="RightClick"
+                                              Command="{Binding ClearTextAlignCenterCommand}"
+                                              CommandParameter="{Binding ElementName=tbxEditor}"/>
+                            </Button.InputBindings>
+                        </Button>
+                        <Button ToolTip="Align to the right"
+                                hc:IconElement.Geometry="{StaticResource icon-format-align-right}"
+                                hc:BorderElement.CornerRadius="0 4 4 0">
+                            <Button.InputBindings>
+                                <MouseBinding MouseAction="LeftClick"
+                                              Command="{Binding MakeTextAlignRightCommand}"
+                                              CommandParameter="{Binding ElementName=tbxEditor}"/>
+                                <MouseBinding MouseAction="RightClick"
+                                              Command="{Binding ClearTextAlignRightCommand}"
+                                              CommandParameter="{Binding ElementName=tbxEditor}"/>
+                            </Button.InputBindings>
+                        </Button>
+                    </StackPanel>
+                    
+                    <!-- Preview -->
+                    <Button Grid.Column="4"
+                            Content="Preview"
+                            hc:IconElement.Geometry="{StaticResource icon-file-view}"
+                            hc:BorderElement.CornerRadius="4 0 0 4"
+                            Command="{Binding PreviewCommand}"/>
+                    <Button Grid.Column="5"
+                            ToolTip="Translating Settings"
+                            hc:IconElement.Geometry="{StaticResource icon-dots-vertical}"
+                            hc:BorderElement.CornerRadius="0 4 4 0"
+                            Padding="0 0 4 0" Width="12"
+                            Command="{Binding OpenPk2SettingsCommand}"/>
+                    <!-- Translate -->
+                    <Button Grid.Column="6" Margin="2 0 0 0"
+                            ToolTip="Translate"
+                            hc:IconElement.Geometry="{StaticResource icon-translate}"
+                            hc:BorderElement.CornerRadius="4 0 0 4"
+                            Padding="8 4 6 4"
+                            Command="{Binding TranslateCommand}"/>
+                    <Button Grid.Column="7"
+                            ToolTip="Translating Settings"
+                            hc:IconElement.Geometry="{StaticResource icon-dots-vertical}"
+                            hc:BorderElement.CornerRadius="0 4 4 0"
+                            Padding="0 0 4 0" Width="12"
+                            Command="{Binding OpenTranslatorSettingsCommand}"/>
+                    <!-- Update -->
+                    <Button Grid.Column="8" Margin="10 0 0 0"
+                            Style="{StaticResource ButtonPrimary}"
+                            Content="Update"
+                            hc:IconElement.Geometry="{StaticResource icon-database-sync}"
+                            Command="{Binding UpdateCommand}"/>
+                </Grid>
+            </Grid>
+
+        </Grid>
+
+        <!-- Text Preview -->
+        <Grid Grid.Column="1"
+              Margin="0 10 5 10">
+            <Grid.RowDefinitions>
+                <!-- Preview -->
+                <RowDefinition/>
+                <!-- Toolbar -->
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Preview -->
+            <Grid Grid.Row="0"
+                  x:Name="ParentContainer">
+                <!-- Default design -->
+                <Border Visibility="{Binding SelectedIndex, ElementName=cbxStyles, Converter={vm:IndexToVisibilityConverter}, ConverterParameter=0}"
+                        BorderThickness="1"
+                        BorderBrush="Black"
+                        CornerRadius="4"
+                        MinWidth="100" MinHeight="40"
+                        VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <Border BorderThickness="1"
+                            BorderBrush="#707ba9"
+                            CornerRadius="4"
+                            Background="#80000033">
+                        <ScrollViewer Style="{StaticResource ScrollViewerNativeBaseStyle}"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      VerticalScrollBarVisibility="Auto">
+                            <htmlrender:HtmlPanel Text="{Binding PreviewText}"
+                                                  MaxWidth="{Binding Width, ElementName=ParentContainer}"
+                                                  local:HtmlPanelImageResolverProperty.Value="{Binding LoadImageCommand}"
+                                                  Background="Transparent"
+                                                  BaseStylesheet="
+                                                  body {
+                                                    color: #fff;
+                                                    font-size: 16px;
+                                                    font-family: Arial, sans-serif;
+                                                    white-space: pre-wrap;
+                                                  }
+                                                  sml2 {
+                                                    white-space: none;
+                                                  }
+                                                  p {
+                                                    margin-top: 6px;
+                                                    margin-bottom: 6px;
+                                                  }
+                                                  font {
+                                                    
+                                                  }
+                                                  img {
+                                                    display:block;
+                                                    margin-bottom:10px;
+                                                  }
+                                                  center {
+                                                    display:block;
+                                                    text-align: center;
+                                                  }
+                                                  right {
+                                                    display:block;
+                                                    text-align: right;
+                                                  }
+                                                  left {
+                                                    display:block;
+                                                    text-align: left;
+                                                  }
+                                                  ">
+                                <htmlrender:HtmlPanel.Effect>
+                                    <DropShadowEffect Color="Black"
+                                                      Opacity="1"
+                                                      ShadowDepth="1"
+                                                      BlurRadius="0"/>
+                                </htmlrender:HtmlPanel.Effect>
+                            </htmlrender:HtmlPanel>
+                        </ScrollViewer>
+                    </Border>
+                </Border>
+
+                <!-- Quest design -->
+                <Border Visibility="{Binding SelectedIndex, ElementName=cbxStyles, Converter={vm:IndexToVisibilityConverter}, ConverterParameter=1}"
+                        Background="{StaticResource img-guide-background}"
+                        Width="376" Height="384"
+                        Padding="1 1 1 0">
+                    <ScrollViewer Style="{StaticResource QuestScrollViewerStyle}"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Margin="28 46 28 45">
+                        <htmlrender:HtmlPanel Text="{Binding PreviewText}"
+                                              Background="Transparent"
+                                              BaseStylesheet="
+                                              body {
+                                                color: #000;
+                                                font-family: Arial;
+                                                font-size: 12px;
+                                                line-height: 12px;
+                                              }
+                                              br {
+                                                margin-top: 0px;
+                                                margin-bottom: 0px;
+                                              }
+                                              strong {
+                                                font-weight: 13px;
+                                              }
+                                              right {
+                                                display: block;
+                                                text-align: right;
+                                              }
+                                              left {
+                                                display: block;
+                                                text-align: left;
+                                              }
+                                              "/>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+
+            <!-- Toolbar for the preview -->
+            <Grid Grid.Row="1" Margin="0 5 0 0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Preview Designs to choose -->
+                <hc:ComboBox Grid.Column="1"
+                             x:Name="cbxStyles"
+                             Style="{StaticResource ComboBoxExtendBaseStyle}"
+                             ToolTip="Preview Style"
+                             SelectedIndex="0"
+                             MinWidth="80">
+                    <ComboBoxItem Content="Default"/>
+                    <ComboBoxItem Content="Quest"/>
+                </hc:ComboBox>
+            </Grid>
+        </Grid>
+
+    </Grid>
+</hc:Window>

@@ -1,0 +1,73 @@
+﻿<hc:Window x:Class="SRO.TextEditor.Views.TranslatorSettings"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        xmlns:local="clr-namespace:SRO.TextEditor"
+        mc:Ignorable="d"
+        Width="360" Height="260"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <!-- Settings layout -->
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+
+            <!-- Save / Cancel-->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Translator list -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <!-- Names -->
+            <ListBox Grid.Column="0"
+                     x:Name="lbxNames"
+                     ToolTip="Translating Service Priority"
+                     ItemsSource="{Binding Translators}"/>
+            <!-- Sorting buttons -->
+            <StackPanel Grid.Column="1"
+                        VerticalAlignment="Center">
+                <Button Height="24"
+                        ToolTip="Move Up"
+                        hc:IconElement.Geometry="{StaticResource icon-arrow-up-bold-outline}"
+                        Command="{Binding TranslatorMoveUpCommand}"
+                        CommandParameter="{Binding ElementName=lbxNames}"/>
+                <Button Height="24" Margin="5"
+                        ToolTip="Move Down"
+                        hc:IconElement.Geometry="{StaticResource icon-arrow-down-bold-outline}"
+                        Command="{Binding TranslatorMoveDownCommand}"
+                        CommandParameter="{Binding ElementName=lbxNames}"/>
+            </StackPanel>
+        </Grid>
+        <!-- Use English as source language -->
+        <CheckBox Grid.Row="1"
+                  Margin="0 10 0 5"
+                  Content="Translate using English as source language (recommended)"/>
+        <!-- Save / Cancel -->
+        <Grid Grid.Row="2"
+              Margin="100 10 100 5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0"
+                    Style="{StaticResource ButtonPrimary}"
+                    Content="Save"
+                    Command="{Binding SaveCommand}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"/>
+            <Button Grid.Column="1"
+                    Style="{StaticResource ButtonDefault}"
+                    Content="Cancel"
+                    Command="{Binding CancelCommand}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"/>
+        </Grid>
+        
+    </Grid>
+</hc:Window>
