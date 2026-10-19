@@ -60,13 +60,11 @@
             <Button Grid.Column="0"
                     Style="{StaticResource ButtonPrimary}"
                     Content="Save"
-                    Command="{Binding SaveCommand}"
-                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"/>
+                    Click="OnAccept"/>
             <Button Grid.Column="1"
                     Style="{StaticResource ButtonDefault}"
                     Content="Cancel"
-                    Command="{Binding CancelCommand}"
-                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"/>
+                    Click="OnCancel"/>
         </Grid>
         
     </Grid>

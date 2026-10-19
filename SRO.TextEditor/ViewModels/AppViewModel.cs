@@ -1,14 +1,12 @@
-﻿using Microsoft.SqlServer.Server;
-using Pfim;
+﻿using Pfim;
 using SRO.PK2API;
 using SRO.TextEditor.Models;
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -18,6 +16,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace SRO.ViewModels
@@ -39,6 +38,8 @@ namespace SRO.ViewModels
         private Pk2Stream mPk2 = null;
         private string mPk2Path = null;
         private string mPk2Key = null;
+        private Color mSelectedForegroundColor = Colors.White;
+        private Color mSelectedBackgroundColor = Colors.White;
         #endregion
 
         #region Public Properties
@@ -98,6 +99,14 @@ namespace SRO.ViewModels
         /// Text to be used as preview.
         /// </summary>
         public string PreviewText { get => mPreviewText; set => SetProperty(ref mPreviewText, value); }
+        /// <summary>
+        /// Foreground color being selected.
+        /// </summary>
+        public Color SelectedForegroundColor { get => mSelectedForegroundColor; set => SetProperty(ref mSelectedForegroundColor, value); }
+        /// <summary>
+        /// Background color being selected.
+        /// </summary>
+        public Color SelectedBackgroundColor { get => mSelectedBackgroundColor; set => SetProperty(ref mSelectedBackgroundColor, value); }
         #endregion
 
         #region Commands
@@ -113,22 +122,6 @@ namespace SRO.ViewModels
         /// Starts editing the selected result from searching list.
         /// </summary>
         public ICommand EditSelectedResultCommand { get; }
-        /// <summary>
-        /// Preview the text being edited.
-        /// </summary>
-        public ICommand PreviewCommand { get; }
-        /// <summary>
-        /// Opens the translator settings window.
-        /// </summary>
-        public ICommand OpenTranslatorSettingsCommand { get; }
-        /// <summary>
-        /// Translate the text being edited into the language selected.
-        /// </summary>
-        public ICommand TranslateCommand { get; }
-        /// <summary>
-        /// Update text into database.
-        /// </summary>
-        public ICommand UpdateCommand { get; }
         public ICommand MakeTextBoldCommand { get; }
         public ICommand ClearTextBoldCommand { get; }
         public ICommand MakeBreaklineCommand { get; }
@@ -139,8 +132,33 @@ namespace SRO.ViewModels
         public ICommand ClearTextAlignCenterCommand { get; }
         public ICommand MakeTextAlignRightCommand { get; }
         public ICommand ClearTextAlignRightCommand { get; }
+        public ICommand MakeForegroundColorCommand { get; }
+        public ICommand ClearForegroundColorCommand { get; }
+        public ICommand OpenForegroundColorPickerCommand { get; }
+        public ICommand MakeBackgroundColorCommand { get; }
+        public ICommand ClearBackgroundColorCommand { get; }
+        public ICommand OpenBackgroundColorPickerCommand { get; }
+        /// <summary>
+        /// Preview the text being edited.
+        /// </summary>
+        public ICommand PreviewCommand { get; }
+        /// <summary>
+        /// Opens the Pk2 settings window.
+        /// </summary>
         public ICommand OpenPk2SettingsCommand { get; }
         public Func<string, BitmapImage> LoadImageCommand => LoadMediaPK2Image;
+        /// <summary>
+        /// Translate the text being edited into the language selected.
+        /// </summary>
+        public ICommand TranslateCommand { get; }
+        /// <summary>
+        /// Opens the translator settings window.
+        /// </summary>
+        public ICommand OpenTranslatorSettingsCommand { get; }
+        /// <summary>
+        /// Update text into database.
+        /// </summary>
+        public ICommand UpdateCommand { get; }
         #endregion
 
         #region Constructor
@@ -373,15 +391,12 @@ namespace SRO.ViewModels
                 int start = tbx.SelectionStart;
                 int length = tbx.SelectionLength;
                 string text = tbx.Text;
-                // Add sml2 behavior
-                if (!text.StartsWith("<sml2>"))
-                {
-                    text = "<sml2>\n" + text + "\n</sml2>";
-                    start += "<sml2>\n".Length;
-                }
+                // Add sml2 if required
+                AddSML2Tag(ref start, ref text);
                 // Set values back
+                var openTag = "<strong>";
                 EditingText = text.Substring(0, start)
-                    + "<strong>" // Open
+                    + openTag // Open
                     + text.Substring(start, length)
                     + "</strong>" // Close
                     + text.Substring(start + length);
@@ -389,7 +404,7 @@ namespace SRO.ViewModels
                 tbx.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() =>
                 {
                     tbx.Focus();
-                    tbx.SelectionStart = start + "<strong>".Length;
+                    tbx.SelectionStart = start + openTag.Length;
                     tbx.SelectionLength = length;
                 }));
             });
@@ -418,12 +433,8 @@ namespace SRO.ViewModels
                 int start = tbx.SelectionStart;
                 int length = tbx.SelectionLength;
                 string text = EditingText;
-                // Add sml2 behavior
-                if (!text.StartsWith("<sml2>"))
-                {
-                    text = "<sml2>\n" + EditingText + "\n</sml2>";
-                    start += "<sml2>\n".Length;
-                }
+                // Add sml2 if required
+                AddSML2Tag(ref start, ref text);
                 // Set values back
                 EditingText = text.Substring(0, start + length)
                     + "<br>" // At the end of selection
@@ -442,32 +453,29 @@ namespace SRO.ViewModels
                 int length = tbx.SelectionLength;
                 string text = tbx.Text;
                 // Delete from selection ONLY
-                if (length > 0)
+                if (length == 0)
+                    return;
+                RemoveTagInSelection(ref start, ref length, ref text, "br");
+                EditingText = text;
+                // Avoid focus flickering
+                tbx.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() =>
                 {
-                    RemoveTagInSelection(ref start, ref length, ref text, "br");
-                    EditingText = text;
-                    // Avoid focus flickering
-                    tbx.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() =>
-                    {
-                        tbx.Focus();
-                        tbx.SelectionStart = start;
-                    }));
-                }
+                    tbx.Focus();
+                    tbx.SelectionStart = start;
+                    tbx.SelectionLength = length;
+                }));
             });
             MakeTextAlignLeftCommand = new RelayCommand<TextBox>((tbx) =>
             {
                 int start = tbx.SelectionStart;
                 int length = tbx.SelectionLength;
                 string text = EditingText;
-                // Add sml2 behavior
-                if (!text.StartsWith("<sml2>"))
-                {
-                    text = "<sml2>\n" + EditingText + "\n</sml2>";
-                    start += "<sml2>\n".Length;
-                }
+                // Add sml2 if required
+                AddSML2Tag(ref start, ref text);
                 // Set values back
+                var openTag = "<left>";
                 EditingText = text.Substring(0, start)
-                    + "<left>" // Open
+                    + openTag // Open
                     + text.Substring(start, length)
                     + "</left>" // Close
                     + text.Substring(start + length);
@@ -475,7 +483,7 @@ namespace SRO.ViewModels
                 tbx.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() =>
                 {
                     tbx.Focus();
-                    tbx.SelectionStart = start + "<left>".Length;
+                    tbx.SelectionStart = start + openTag.Length;
                     tbx.SelectionLength = length;
                 }));
             });
@@ -504,15 +512,12 @@ namespace SRO.ViewModels
                 int start = tbx.SelectionStart;
                 int length = tbx.SelectionLength;
                 string text = EditingText;
-                // Add sml2 behavior
-                if (!text.StartsWith("<sml2>"))
-                {
-                    text = "<sml2>\n" + EditingText + "\n</sml2>";
-                    start += "<sml2>\n".Length;
-                }
+                // Add sml2 if required
+                AddSML2Tag(ref start, ref text);
                 // Set values back
+                var openTag = "<center>";
                 EditingText = text.Substring(0, start)
-                    + "<center>" // Open
+                    + openTag // Open
                     + text.Substring(start, length)
                     + "</center>" // Close
                     + text.Substring(start + length);
@@ -520,7 +525,7 @@ namespace SRO.ViewModels
                 tbx.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() =>
                 {
                     tbx.Focus();
-                    tbx.SelectionStart = start + "<center>".Length;
+                    tbx.SelectionStart = start + openTag.Length;
                     tbx.SelectionLength = length;
                 }));
             });
@@ -549,15 +554,12 @@ namespace SRO.ViewModels
                 int start = tbx.SelectionStart;
                 int length = tbx.SelectionLength;
                 string text = EditingText;
-                // Add sml2 behavior
-                if (!text.StartsWith("<sml2>"))
-                {
-                    text = "<sml2>\n" + EditingText + "\n</sml2>";
-                    start += "<sml2>\n".Length;
-                }
+                // Add sml2 if required
+                AddSML2Tag(ref start, ref text);
                 // Set values back
+                var openTag = "<right>";
                 EditingText = text.Substring(0, start)
-                    + "<right>" // Open
+                    + openTag // Open
                     + text.Substring(start, length)
                     + "</right>" // Close
                     + text.Substring(start + length);
@@ -565,13 +567,12 @@ namespace SRO.ViewModels
                 tbx.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() =>
                 {
                     tbx.Focus();
-                    tbx.SelectionStart = start + "<right>".Length;
+                    tbx.SelectionStart = start + openTag.Length;
                     tbx.SelectionLength = length;
                 }));
             });
             ClearTextAlignRightCommand = new RelayCommand<TextBox>((tbx) =>
             {
-                tbx.Focus();
                 int start = tbx.SelectionStart;
                 int length = tbx.SelectionLength;
                 string text = tbx.Text;
@@ -589,6 +590,138 @@ namespace SRO.ViewModels
                     tbx.SelectionStart = start;
                     tbx.SelectionLength = length;
                 }));
+            });
+            MakeForegroundColorCommand = new RelayCommand<TextBox>((tbx) =>
+            {
+                int start = tbx.SelectionStart;
+                int length = tbx.SelectionLength;
+                string text = tbx.Text;
+                // Add sml2 if required
+                AddSML2Tag(ref start, ref text);
+                // Try to add color to selected tag
+                if (length == 0)
+                {
+                    AddAttributeSROColorToTag(ref start, ref text, "color", SelectedForegroundColor, new string[] { "font" });
+                    EditingText = text;
+                }
+                // Add a font tag with color
+                else
+                {
+                    var openTag = $"<font color=\"{SelectedForegroundColor.A},{SelectedForegroundColor.R},{SelectedForegroundColor.G},{SelectedForegroundColor.B}\">";
+                    EditingText = text.Substring(0, start)
+                                + openTag // Open
+                                + text.Substring(start, length)
+                                + "</font>" // Close
+                                + text.Substring(start + length);
+                    start += openTag.Length;
+                }
+                // Avoid focus flickering
+                tbx.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() =>
+                {
+                    tbx.Focus();
+                    tbx.SelectionStart = start;
+                    tbx.SelectionLength = length;
+                }));
+            });
+            ClearForegroundColorCommand = new RelayCommand<TextBox>((tbx) =>
+            {
+                int start = tbx.SelectionStart;
+                int length = tbx.SelectionLength;
+                string text = tbx.Text;
+                // Delete from selection ONLY
+                if (length == 0)
+                    return;
+                RemoveAttributeInSelection(ref start, ref length, ref text, "color"); 
+                EditingText = text;
+                // Avoid focus flickering
+                tbx.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() =>
+                {
+                    tbx.Focus();
+                    tbx.SelectionStart = start;
+                    tbx.SelectionLength = length;
+                }));
+            });
+            OpenForegroundColorPickerCommand = new RelayCommand<object>((param) =>
+            {
+                var window = new TextEditor.Views.ColorPickerWindow
+                {
+                    Title = $"{info.ProductName} - Color Picker",
+                    Owner = System.Windows.Application.Current.MainWindow,
+                    DataContext = new ColorPickerViewModel() { SelectedColor = SelectedForegroundColor },
+                };
+                bool? result = window.ShowDialog();
+                if (result == true)
+                {
+                    // Update settings
+                    var ctx = window.DataContext as ColorPickerViewModel;
+                    SelectedForegroundColor = ctx.SelectedColor;
+                }
+            });
+            MakeBackgroundColorCommand = new RelayCommand<TextBox>((tbx) =>
+            {
+                int start = tbx.SelectionStart;
+                int length = tbx.SelectionLength;
+                string text = tbx.Text;
+                // Add sml2 if required
+                AddSML2Tag(ref start, ref text);
+                // Try to add color to selected tag
+                if (length == 0)
+                {
+                    AddAttributeSROColorToTag(ref start, ref text, "bgcolor", SelectedForegroundColor, new string[] { "font", "td" });
+                    EditingText = text;
+                }
+                // Add a font tag with color
+                else
+                {
+                    var openTag = $"<font bgcolor=\"{SelectedForegroundColor.A},{SelectedForegroundColor.R},{SelectedForegroundColor.G},{SelectedForegroundColor.B}\">";
+                    EditingText = text.Substring(0, start)
+                                + openTag // Open
+                                + text.Substring(start, length)
+                                + "</font>" // Close
+                                + text.Substring(start + length);
+                    start += openTag.Length;
+                }
+                // Avoid focus flickering
+                tbx.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() =>
+                {
+                    tbx.Focus();
+                    tbx.SelectionStart = start;
+                    tbx.SelectionLength = length;
+                }));
+            });
+            ClearBackgroundColorCommand = new RelayCommand<TextBox>((tbx) =>
+            {
+                int start = tbx.SelectionStart;
+                int length = tbx.SelectionLength;
+                string text = tbx.Text;
+                // Delete from selection ONLY
+                if (length == 0)
+                    return;
+                RemoveAttributeInSelection(ref start, ref length, ref text, "bgcolor");
+                EditingText = text;
+                // Avoid focus flickering
+                tbx.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() =>
+                {
+                    tbx.Focus();
+                    tbx.SelectionStart = start;
+                    tbx.SelectionLength = length;
+                }));
+            });
+            OpenBackgroundColorPickerCommand = new RelayCommand<object>((param) =>
+            {
+                var window = new TextEditor.Views.ColorPickerWindow
+                {
+                    Title = $"{info.ProductName} - Color Picker",
+                    Owner = System.Windows.Application.Current.MainWindow,
+                    DataContext = new ColorPickerViewModel() { SelectedColor = SelectedBackgroundColor },
+                };
+                bool? result = window.ShowDialog();
+                if (result == true)
+                {
+                    // Update settings
+                    var ctx = window.DataContext as ColorPickerViewModel;
+                    SelectedBackgroundColor = ctx.SelectedColor;
+                }
             });
 
             // Make some commands to change their executing status
@@ -688,6 +821,14 @@ namespace SRO.ViewModels
             }
             return string.Empty;
         }
+        private void AddSML2Tag(ref int start, ref string text)
+        {
+            if (!text.StartsWith("<sml2>"))
+            {
+                text = "<sml2>\n" + text + "\n</sml2>";
+                start += "<sml2>\n".Length;
+            }
+        }
         private void RemoveEnclosingTagsAroundCursor(ref int selectionStart,ref string text, string openTag, string closeTag)
         {
             int cursor = selectionStart;
@@ -774,8 +915,6 @@ namespace SRO.ViewModels
         }
         private void RemoveTagInSelection(ref int selectionStart, ref int selectionLength, ref string text, string tag)
         {
-            if (selectionLength <= 0) return;
-
             int start = selectionStart;
             int length = selectionLength;
 
@@ -791,6 +930,36 @@ namespace SRO.ViewModels
 
             // 4. Rebuild the main text and update selection length
             text = text.Substring(0, start) + cleanedText + text.Substring(start + length);
+            selectionLength = cleanedText.Length;
+        }
+        private void RemoveAttributeInSelection(ref int selectionStart, ref int selectionLength, ref string text, string attribute)
+        {
+            int start = selectionStart;
+            int length = selectionLength;
+
+            // 1. Extract the currently selected text
+            string selectedText = text.Substring(start, length);
+
+            // 2. Match any opening or self-closing tag within the selection
+            string tagPattern = @"<\s*([a-zA-Z0-9]+)\b([^>]*)>";
+
+            string cleanedText = Regex.Replace(selectedText, tagPattern, match =>
+            {
+                string tagName = match.Groups[1].Value;
+                string attrBlock = match.Groups[2].Value;
+
+                // 3. Pattern to target the specific attribute and its value (quoted or unquoted),
+                // capturing leading whitespace so it doesn't leave double spaces behind.
+                string attrRegex = $@"\s*\b{Regex.Escape(attribute)}\s*=\s*(?:""[^""]*""|'[^']*'|[^\s>]+)";
+                // Remove the attribute from the attribute block
+                string cleanedAttrBlock = Regex.Replace(attrBlock, attrRegex, string.Empty, RegexOptions.IgnoreCase);
+                return $"<{tagName}{cleanedAttrBlock}>";
+            }, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+            // 4. Rebuild the main text with the cleaned selection
+            text = text.Substring(0, start) + cleanedText + text.Substring(start + length);
+
+            // 5. Update the selection length to reflect the removed attribute characters
             selectionLength = cleanedText.Length;
         }
         private string FixLegacyHtmlColor(string html)
@@ -814,6 +983,118 @@ namespace SRO.ViewModels
                                                                  // Reconstruct the exact same tag name and keep all non-color attributes intact
                 return $"<{tagName}{beforeColorAttrs}color={quote}#{r:X2}{g:X2}{b:X2}{quote}{afterColorAttrs}>";
             }, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        }
+        private void AddAttributeSROColorToTag(ref int selectionStart, ref string text, string attributeName, Color color, string[] allowedTagNames)
+        {
+            int cursor = selectionStart;
+            int textLength = text.Length;
+            // Color format
+            string hexColor = $"{color.A},{color.R},{color.G},{color.B}";
+            // 1. Scan left from cursor to find the nearest enclosing opening tag
+            int openTagStart = -1;
+            int openTagEnd = -1;
+            int depth = 0;
+            for (int i = cursor - 1; i >= 0; i--)
+            {
+                if (text[i] == '>')
+                {
+                    // If we hit '>' moving left, check if it's a closing tag </tag>
+                    int lastSlash = text.LastIndexOf('/', i);
+                    int lastOpen = text.LastIndexOf('<', i);
+                    if (lastOpen != -1 && lastSlash > lastOpen)
+                        depth++; // Enclosed in a deeper nested scope
+                    else if (lastOpen != -1)
+                    {
+                        // Hit a completed opening tag to the left, skip past its content scope
+                        depth++;
+                    }
+                }
+                else if (text[i] == '<')
+                {
+                    if (depth > 0)
+                        depth--;
+                    else
+                    {
+                        // Found our outer opening tag start
+                        openTagStart = i;
+                        openTagEnd = text.IndexOf('>', i);
+                        break;
+                    }
+                }
+            }
+            if (openTagStart == -1 || openTagEnd == -1 || openTagEnd < openTagStart)
+                return; // No enclosing tag found
+
+            // Extract tag name and check if allowed
+            string fullTag = text.Substring(openTagStart, openTagEnd - openTagStart + 1);
+            Match nameMatch = Regex.Match(fullTag, @"^<\s*([a-zA-Z0-9]+)");
+            if (!nameMatch.Success)
+                return;
+
+            string matchedTagName = nameMatch.Groups[1].Value;
+            bool isAllowed = allowedTagNames.Any(t => string.Equals(t, matchedTagName, StringComparison.OrdinalIgnoreCase));
+            if (!isAllowed)
+                return;
+
+            // 2. Scan right from cursor to verify matching closing tag exists
+            int closeTagStart = -1;
+            depth = 0;
+
+            for (int i = cursor; i <= text.Length - 1; i++)
+            {
+                if (text[i] == '<')
+                {
+                    if (i + 1 < text.Length && text[i + 1] == '/')
+                    {
+                        if (depth > 0)
+                            depth--;
+                        else
+                        {
+                            closeTagStart = i;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        depth++; // Nested open tag
+                    }
+                }
+            }
+
+            if (closeTagStart == -1)
+                return; // Cursor is not properly enclosed in a matching pair
+
+            // 3. Update or Add the color attribute inside the tag
+            string attrRegex = $@"\b{Regex.Escape(attributeName)}\s*=\s*(?:""[^""]*""|'[^']*'|[^\s>]+)";
+            string newAttribute = $"{attributeName}=\"{hexColor}\"";
+            string updatedTag;
+
+            if (Regex.IsMatch(fullTag, attrRegex, RegexOptions.IgnoreCase))
+            {
+                // Replace existing color attribute
+                updatedTag = Regex.Replace(fullTag, attrRegex, newAttribute, RegexOptions.IgnoreCase);
+            }
+            else
+            {
+                // Insert new color attribute right after the tag name
+                int insertPos = nameMatch.Index + nameMatch.Length;
+                updatedTag = fullTag.Insert(insertPos, $" {newAttribute}");
+            }
+
+            // 4. Rebuild the text and adjust cursor offset
+            int oldContentStart = openTagEnd + 1;
+            text = text.Substring(0, openTagStart) + updatedTag + text.Substring(oldContentStart);
+            int newContentStart = openTagStart + updatedTag.Length;
+            if (cursor >= oldContentStart)
+            {
+                // Cursor was in the content text; shift it by the difference in tag length
+                selectionStart = cursor + (newContentStart - oldContentStart);
+            }
+            else
+            {
+                // Cursor was inside the tag itself; clamp it safely within the modified tag bounds
+                selectionStart = Math.Min(Math.Max(openTagStart, cursor), newContentStart);
+            }
         }
         private string FixLegacyHtmlLineMargin(string html)
         {
@@ -994,11 +1275,11 @@ namespace SRO.ViewModels
                                 throw new NotSupportedException($"DDS format not supported [{image.Format}]");
                         }
                         // Create bitmap
-                        using (var bitmap = new Bitmap(image.Width, image.Height, pixelFormat))
+                        using (var bitmap = new System.Drawing.Bitmap(image.Width, image.Height, pixelFormat))
                         {
-                            BitmapData rectData = bitmap.LockBits(
-                                new Rectangle(0, 0, image.Width, image.Height),
-                                ImageLockMode.WriteOnly,
+                            System.Drawing.Imaging.BitmapData rectData = bitmap.LockBits(
+                                new System.Drawing.Rectangle(0, 0, image.Width, image.Height),
+                                System.Drawing.Imaging.ImageLockMode.WriteOnly,
                                 pixelFormat
                             );
                             // Copy Pfim's buffer straight into System.Drawing's allocated memory

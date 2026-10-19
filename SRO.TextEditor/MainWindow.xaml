@@ -215,52 +215,55 @@
                         <ColumnDefinition Width="auto"/>
                         <ColumnDefinition Width="auto"/>
                         <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="auto"/>
                         <ColumnDefinition/>
-                        <ColumnDefinition Width="auto"/>
-                        <ColumnDefinition Width="auto"/>
                         <ColumnDefinition Width="auto"/>
                         <ColumnDefinition Width="auto"/>
                         <ColumnDefinition Width="auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Bold -->
-                    <Button Grid.Column="0"
-                            ToolTip="Bold"
-                            hc:IconElement.Geometry="{StaticResource icon-format-bold}"
-                            hc:BorderElement.CornerRadius="4 0 0 4"
-                            Focusable="False">
-                        <Button.InputBindings>
-                            <MouseBinding MouseAction="LeftClick"
-                                          Command="{Binding MakeTextBoldCommand}"
-                                          CommandParameter="{Binding ElementName=tbxEditor}"/>
-                            <MouseBinding MouseAction="RightClick"
-                                          Command="{Binding ClearTextBoldCommand}"
-                                          CommandParameter="{Binding ElementName=tbxEditor}"/>
-                        </Button.InputBindings>
-                    </Button>
-                    <!-- Breakline -->
-                    <Button Grid.Column="1"
-                            ToolTip="Breakline"
-                            hc:IconElement.Geometry="{StaticResource icon-format-breakline}"
-                            hc:BorderElement.CornerRadius="0 4 4 0"
-                            Focusable="False">
-                        <Button.InputBindings>
-                            <MouseBinding MouseAction="LeftClick"
-                                          Command="{Binding MakeBreaklineCommand}"
-                                          CommandParameter="{Binding ElementName=tbxEditor}"/>
-                            <MouseBinding MouseAction="RightClick"
-                                          Command="{Binding ClearBreaklineCommand}"
-                                          CommandParameter="{Binding ElementName=tbxEditor}"/>
-                        </Button.InputBindings>
-                    </Button>
+                    <!-- Bold / Breakline -->
+                    <StackPanel Grid.Column="0"
+                                Orientation="Horizontal">
+                        <!-- Bold -->
+                        <Button ToolTip="Bold"
+                                hc:IconElement.Geometry="{StaticResource icon-format-bold}"
+                                hc:BorderElement.CornerRadius="4 0 0 4"
+                                Focusable="False">
+                            <Button.InputBindings>
+                                <MouseBinding MouseAction="LeftClick"
+                                              Command="{Binding MakeTextBoldCommand}"
+                                              CommandParameter="{Binding ElementName=tbxEditor}"/>
+                                <MouseBinding MouseAction="RightClick"
+                                              Command="{Binding ClearTextBoldCommand}"
+                                              CommandParameter="{Binding ElementName=tbxEditor}"/>
+                            </Button.InputBindings>
+                        </Button>
+                        <!-- Breakline -->
+                        <Button ToolTip="Breakline"
+                                hc:IconElement.Geometry="{StaticResource icon-format-breakline}"
+                                hc:BorderElement.CornerRadius="0 4 4 0"
+                                Focusable="False">
+                            <Button.InputBindings>
+                                <MouseBinding MouseAction="LeftClick"
+                                              Command="{Binding MakeBreaklineCommand}"
+                                              CommandParameter="{Binding ElementName=tbxEditor}"/>
+                                <MouseBinding MouseAction="RightClick"
+                                              Command="{Binding ClearBreaklineCommand}"
+                                              CommandParameter="{Binding ElementName=tbxEditor}"/>
+                            </Button.InputBindings>
+                        </Button>
+                    </StackPanel>
 
                     <!-- Text Align -->
-                    <StackPanel Grid.Column="2"
-                                Margin="2 0 0 0"
+                    <StackPanel Grid.Column="1"
+                                Margin="3 0 0 0"
                                 Orientation="Horizontal">
+                        <!-- Left -->
                         <Button ToolTip="Align to the Left"
                                 hc:IconElement.Geometry="{StaticResource icon-format-align-left}"
-                                hc:BorderElement.CornerRadius="4 0 0 4">
+                                hc:BorderElement.CornerRadius="4 0 0 4"
+                                Focusable="False">
                             <Button.InputBindings>
                                 <MouseBinding MouseAction="LeftClick"
                                               Command="{Binding MakeTextAlignLeftCommand}"
@@ -270,9 +273,11 @@
                                               CommandParameter="{Binding ElementName=tbxEditor}"/>
                             </Button.InputBindings>
                         </Button>
+                        <!-- Center -->
                         <Button ToolTip="Align to the center"
                                 hc:IconElement.Geometry="{StaticResource icon-format-align-center}"
-                                hc:BorderElement.CornerRadius="0">
+                                hc:BorderElement.CornerRadius="0"
+                                Focusable="False">
                             <Button.InputBindings>
                                 <MouseBinding MouseAction="LeftClick"
                                               Command="{Binding MakeTextAlignCenterCommand}"
@@ -282,9 +287,11 @@
                                               CommandParameter="{Binding ElementName=tbxEditor}"/>
                             </Button.InputBindings>
                         </Button>
+                        <!-- Right -->
                         <Button ToolTip="Align to the right"
                                 hc:IconElement.Geometry="{StaticResource icon-format-align-right}"
-                                hc:BorderElement.CornerRadius="0 4 4 0">
+                                hc:BorderElement.CornerRadius="0 4 4 0"
+                                Focusable="False">
                             <Button.InputBindings>
                                 <MouseBinding MouseAction="LeftClick"
                                               Command="{Binding MakeTextAlignRightCommand}"
@@ -296,33 +303,99 @@
                         </Button>
                     </StackPanel>
                     
+                    <!-- Foreground / Background color -->
+                    <StackPanel Grid.Column="2"
+                                Orientation="Horizontal"
+                                Margin="3 0 0 0">
+                        <!-- Foreground color -->
+                        <StackPanel>
+                            <Button ToolTip="Color"
+                                    hc:IconElement.Geometry="{StaticResource icon-format-color-text}"
+                                    hc:BorderElement.CornerRadius="4 0 0 0"
+                                    Height="22"
+                                    Padding="8 0"
+                                    Focusable="False">
+                                <Button.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick"
+                                                  Command="{Binding MakeForegroundColorCommand}"
+                                                  CommandParameter="{Binding ElementName=tbxEditor}"/>
+                                    <MouseBinding MouseAction="RightClick"
+                                                  Command="{Binding ClearForegroundColorCommand}"
+                                                  CommandParameter="{Binding ElementName=tbxEditor}"/>
+                                </Button.InputBindings>
+                            </Button>
+                            <Button x:Name="btnForegroundColorChange"
+                                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                    Height="6"
+                                    hc:BorderElement.CornerRadius="0"
+                                    Background="{Binding SelectedForegroundColor, Converter={vm:ColorToBrushConverter}}"
+                                    ToolTip="Change Color"
+                                    Command="{Binding OpenForegroundColorPickerCommand}"
+                                    BorderThickness="1 0 1 1"
+                                    Focusable="False"/>
+                        </StackPanel>
+
+                        <!-- Background color -->
+                        <StackPanel>
+                            <Button ToolTip="Background Color"
+                                    hc:IconElement.Geometry="{StaticResource icon-format-color-fill}"
+                                    hc:BorderElement.CornerRadius="0 4 0 0"
+                                    BorderThickness="1 1 1 1"
+                                    Height="22"
+                                    Padding="8 0"
+                                    Focusable="False">
+                                <Button.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick"
+                                                  Command="{Binding MakeBackgroundColorCommand}"
+                                                  CommandParameter="{Binding ElementName=tbxEditor}"/>
+                                    <MouseBinding MouseAction="RightClick"
+                                                  Command="{Binding ClearBackgroundColorCommand}"
+                                                  CommandParameter="{Binding ElementName=tbxEditor}"/>
+                                </Button.InputBindings>
+                            </Button>
+                            <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                    Height="6"
+                                    hc:BorderElement.CornerRadius="0"
+                                    Background="{Binding SelectedBackgroundColor, Converter={vm:ColorToBrushConverter}}"
+                                    ToolTip="Change Background Color"
+                                    Command="{Binding OpenBackgroundColorPickerCommand}"
+                                    BorderThickness="1 0 1 1"
+                                    Focusable="False"/>
+                        </StackPanel>
+                    </StackPanel>
+                    
                     <!-- Preview -->
-                    <Button Grid.Column="4"
-                            Content="Preview"
-                            hc:IconElement.Geometry="{StaticResource icon-file-view}"
-                            hc:BorderElement.CornerRadius="4 0 0 4"
-                            Command="{Binding PreviewCommand}"/>
-                    <Button Grid.Column="5"
-                            ToolTip="Translating Settings"
-                            hc:IconElement.Geometry="{StaticResource icon-dots-vertical}"
-                            hc:BorderElement.CornerRadius="0 4 4 0"
-                            Padding="0 0 4 0" Width="12"
-                            Command="{Binding OpenPk2SettingsCommand}"/>
+                    <StackPanel Grid.Column="5"
+                                Orientation="Horizontal">
+                        <Button Content="Preview"
+                                hc:IconElement.Geometry="{StaticResource icon-file-view}"
+                                hc:BorderElement.CornerRadius="4 0 0 4"
+                                Command="{Binding PreviewCommand}"/>
+                        <Button ToolTip="Translating Settings"
+                                hc:IconElement.Geometry="{StaticResource icon-dots-vertical}"
+                                hc:BorderElement.CornerRadius="0 4 4 0"
+                                Padding="0 0 4 0" Width="12"
+                                Command="{Binding OpenPk2SettingsCommand}"/>
+                    </StackPanel>
+                    
                     <!-- Translate -->
-                    <Button Grid.Column="6" Margin="2 0 0 0"
-                            ToolTip="Translate"
-                            hc:IconElement.Geometry="{StaticResource icon-translate}"
-                            hc:BorderElement.CornerRadius="4 0 0 4"
-                            Padding="8 4 6 4"
-                            Command="{Binding TranslateCommand}"/>
-                    <Button Grid.Column="7"
-                            ToolTip="Translating Settings"
-                            hc:IconElement.Geometry="{StaticResource icon-dots-vertical}"
-                            hc:BorderElement.CornerRadius="0 4 4 0"
-                            Padding="0 0 4 0" Width="12"
-                            Command="{Binding OpenTranslatorSettingsCommand}"/>
+                    <StackPanel Grid.Column="6"
+                                Orientation="Horizontal"
+                                Margin="3 0 0 0">
+                        <Button ToolTip="Translate"
+                                hc:IconElement.Geometry="{StaticResource icon-translate}"
+                                hc:BorderElement.CornerRadius="4 0 0 4"
+                                Padding="8 4 6 4"
+                                Command="{Binding TranslateCommand}"/>
+                        <Button ToolTip="Translating Settings"
+                                hc:IconElement.Geometry="{StaticResource icon-dots-vertical}"
+                                hc:BorderElement.CornerRadius="0 4 4 0"
+                                Padding="0 0 4 0" Width="12"
+                                Command="{Binding OpenTranslatorSettingsCommand}"/>
+                    </StackPanel>
+                    
                     <!-- Update -->
-                    <Button Grid.Column="8" Margin="10 0 0 0"
+                    <Button Grid.Column="7" Margin="10 0 0 0"
                             Style="{StaticResource ButtonPrimary}"
                             Content="Update"
                             hc:IconElement.Geometry="{StaticResource icon-database-sync}"

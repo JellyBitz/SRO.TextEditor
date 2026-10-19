@@ -12,7 +12,16 @@ namespace SRO.TextEditor.Views
         {
             InitializeComponent();
         }
-
+        private void OnAccept(object sender, System.Windows.RoutedEventArgs e)
+        {
+            DialogResult = true;
+            Close();
+        }
+        private void OnCancel(object sender, System.Windows.RoutedEventArgs e)
+        {
+            DialogResult = false;
+            Close();
+        }
         private void SearchButton_OnClick(object sender, System.Windows.RoutedEventArgs e)
         {
             var openFileDialog = new OpenFileDialog

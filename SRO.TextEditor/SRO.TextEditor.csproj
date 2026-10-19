@@ -161,12 +161,17 @@
     <Compile Include="Resources\submodules\SRO.PK2API\SRO.PK2API\SRO.PK2API\Pk2Stream.cs" />
     <Compile Include="ValueConverters\BaseValueConverter.cs" />
     <Compile Include="ValueConverters\BooleanToVisibilityConverter.cs" />
+    <Compile Include="ValueConverters\ColorToBrushConverter.cs" />
     <Compile Include="ValueConverters\IndexToVisibilityConverter.cs" />
+    <Compile Include="ViewModels\ColorPickerViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />
     <Compile Include="ViewModels\AppViewModel.cs" />
     <Compile Include="ViewModels\Base\BaseViewModel.cs" />
     <Compile Include="ViewModels\Base\ExpressionHelpers.cs" />
     <Compile Include="ViewModels\Base\RelayCommand.cs" />
+    <Compile Include="Views\ColorPickerWindow.xaml.cs">
+      <DependentUpon>ColorPickerWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\Pk2Settings.xaml.cs">
       <DependentUpon>Pk2Settings.xaml</DependentUpon>
     </Compile>
@@ -197,6 +202,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Styles\Scroll.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\ColorPickerWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -264,6 +273,14 @@
       <ErrorText>Este proyecto hace referencia a los paquetes NuGet que faltan en este equipo. Use la restauración de paquetes NuGet para descargarlos. Para obtener más información, consulte http://go.microsoft.com/fwlink/?LinkID=322105. El archivo que falta es {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets'))" />
+  </Target>
+  <Target Name="CopyHandyControlLang" AfterTargets="Build">
+    <ItemGroup>
+      <HandyControlEnLang Include="$(NuGetPackageFolders)handycontrol.lang.en\*\lib\net*\en\HandyControl.resources.dll" />
+      <HandyControlEnLangCache Include="$(UserProfile)\.nuget\packages\handycontrol.lang.en\*\lib\net*\en\HandyControl.resources.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(HandyControlEnLang)" DestinationFolder="$(TargetDir)en\" Condition="Exists('%(RootDir)%(Directory)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(HandyControlEnLangCache)" DestinationFolder="$(TargetDir)en\" Condition="!Exists('$(TargetDir)en\HandyControl.resources.dll') AND Exists('%(RootDir)%(Directory)%(Filename)%(Extension)')" />
   </Target>
   <PropertyGroup>
     <PostBuildEvent>DEL *.xml

@@ -42,10 +42,6 @@ namespace SRO.ViewModels
 
         #region Commands
         [JsonIgnore]
-        public ICommand SaveCommand { get; }
-        [JsonIgnore]
-        public ICommand CancelCommand { get; }
-        [JsonIgnore]
         public ICommand TranslatorMoveUpCommand { get; }
         [JsonIgnore]
         public ICommand TranslatorMoveDownCommand { get; }
@@ -57,16 +53,6 @@ namespace SRO.ViewModels
         /// </summary>
         public SettingsViewModel()
         {
-            SaveCommand = new RelayCommand<Window>((window) =>
-            {
-                window.DialogResult = true;
-                window.Close();
-            });
-            CancelCommand = new RelayCommand<Window>((window) =>
-            {
-                window.DialogResult = false;
-                window.Close();
-            });
             TranslatorMoveUpCommand = new RelayCommand<ListBox>((lbx) =>
             {
                 int index = lbx.SelectedIndex;
