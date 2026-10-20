@@ -11,7 +11,11 @@ Simple but effective text code editor/viewer for SRO.
 
 ## Preview :
 
-[![Watch the video](https://img.youtube.com/vi/vVx13nP69V0/default.jpg)](https://youtu.be/vVx13nP69V0)
+<div align="left">
+      <a href="https://www.youtube.com/watch?v=vVx13nP69V0">
+         <img src="https://i.ytimg.com/vi/vVx13nP69V0/maxresdefault.jpg" style="width:100%;">
+      </a>
+</div>
 
 ## Database :
 
