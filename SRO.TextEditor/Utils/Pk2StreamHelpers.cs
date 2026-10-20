@@ -42,13 +42,10 @@ namespace SRO.TextEditor.Utils
 
                     // Decode image data
                     byte[] imgData = null;
-                    int width, height;
                     PixelFormat wpfPixelFormat = PixelFormats.Default;
                     using (var image = Pfim.Pfimage.FromStream(ms))
                     {
-                        width = image.Width;
-                        height = image.Height;
-
+                        var stride = image.Stride;
                         // Pfim format to WPF PixelFormat
                         switch (image.Format)
                         {
@@ -57,60 +54,67 @@ namespace SRO.TextEditor.Utils
                                 imgData = new byte[image.Data.Length];
                                 Buffer.BlockCopy(image.Data, 0, imgData, 0, image.Data.Length);
                                 break;
-
                             case Pfim.ImageFormat.Rgba32:
                                 wpfPixelFormat = PixelFormats.Bgra32;
                                 imgData = new byte[image.Data.Length];
                                 Buffer.BlockCopy(image.Data, 0, imgData, 0, image.Data.Length);
+                                // Fix alpha channel if required
+                                bool hasValidAlpha = false;
+                                for (int i = 3; i < image.Data.Length; i += 4)
+                                {
+                                    if (image.Data[i] > 0)
+                                    {
+                                        hasValidAlpha = true;
+                                        break;
+                                    }
+                                }
+                                if (!hasValidAlpha)
+                                    for (int i = 3; i < imgData.Length; i += 4)
+                                        imgData[i] = 255;
                                 break;
-
                             case Pfim.ImageFormat.R5g6b5:
                                 wpfPixelFormat = PixelFormats.Bgr565;
                                 imgData = new byte[image.Data.Length];
                                 Buffer.BlockCopy(image.Data, 0, imgData, 0, image.Data.Length);
                                 break;
-
                             case Pfim.ImageFormat.R5g5b5a1:
                                 // Convert 16-bit A1R5G5B5 to 32-bit Bgra32 since WPF lacks a native 16-bit alpha format
                                 wpfPixelFormat = PixelFormats.Bgra32;
-                                imgData = Convert16BitTo32BitBgra(image.Data, width, height);
+                                imgData = Convert16BitTo32BitBgra(image.Data, image.Width, image.Height);
+                                stride = image.Width * 4;
                                 break;
-
                             default:
                                 throw new NotSupportedException($"DDS format not supported [{image.Format}]");
                         }
+                        // Create WPF BitmapSource from raw pixel bytes
+                        BitmapSource bitmapSource = BitmapSource.Create(
+                            image.Width,
+                            image.Height,
+                            96d,
+                            96d,
+                            wpfPixelFormat,
+                            null,
+                            imgData,
+                            stride);
+
+                        // Convert BitmapSource to BitmapImage for WPF binding
+                        BitmapImage bitmapImage = new BitmapImage();
+                        using (MemoryStream outStream = new MemoryStream())
+                        {
+                            var encoder = new PngBitmapEncoder();
+                            encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
+                            encoder.Save(outStream);
+
+                            // Create Bitmap Image
+                            bitmapImage.BeginInit();
+                            bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                            bitmapImage.StreamSource = new MemoryStream(outStream.ToArray());
+                            bitmapImage.EndInit();
+                            // Freeze makes the BitmapImage cross-thread accessible
+                            bitmapImage.Freeze();
+                        }
+                        return bitmapImage;
                     }
-                    // Calculate stride (bytes per row)
-                    int stride = (width * wpfPixelFormat.BitsPerPixel + 7) / 8;
-
-                    // Create WPF BitmapSource from raw pixel bytes
-                    BitmapSource bitmapSource = BitmapSource.Create(
-                        width,
-                        height,
-                        96d,
-                        96d,
-                        wpfPixelFormat,
-                        null,
-                        imgData,
-                        stride);
-
-                    // Convert BitmapSource to BitmapImage for WPF binding
-                    BitmapImage bitmapImage = new BitmapImage();
-                    using (MemoryStream outStream = new MemoryStream())
-                    {
-                        PngBitmapEncoder encoder = new PngBitmapEncoder();
-                        encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
-                        encoder.Save(outStream);
-
-                        bitmapImage.BeginInit();
-                        bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-                        bitmapImage.StreamSource = new MemoryStream(outStream.ToArray());
-                        bitmapImage.EndInit();
-                        // Freeze makes the BitmapImage cross-thread accessible
-                        bitmapImage.Freeze();
-                    }
-
-                    return bitmapImage;
                 }
             }
             catch

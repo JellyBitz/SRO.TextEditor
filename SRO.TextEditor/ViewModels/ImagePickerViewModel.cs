@@ -71,26 +71,15 @@ namespace SRO.ViewModels
                 if (e.PropertyName.Equals(nameof(SelectedPath)))
                 {
                     if (string.IsNullOrEmpty(SelectedPath))
+                        return;
+
+                    SelectedImage = mPk2.GetBitmapImage(SelectedPath);
+                    if (SelectedImage != null)
                     {
-                        var file = mPk2.GetFile(SelectedPath);
-                        if (file != null)
-                        {
-                            SelectedImage = mPk2.GetBitmapImage(SelectedPath);
-                            SelectedImageWidth = (int)SelectedImage.Width;
-                            SelectedImageHeight = (int)SelectedImage.Height;
-                            SelectedImageSize = FormatFileSize(file.Size);
-                            return;
-                        }
-                        else
-                        {
-                            SelectedImageSize = FormatFileSize(file.Size);
-                        }
+                        SelectedImageWidth = (int)SelectedImage.Width;
+                        SelectedImageHeight = (int)SelectedImage.Height;
+                        SelectedImageSize = FormatFileSize(mPk2.GetFile(SelectedPath).Size);
                     }
-                    else
-                    {
-                        SelectedImageSize = FormatFileSize(0);
-                    }
-                    SelectedImageWidth = SelectedImageHeight = 0;
                 }
             };
 
