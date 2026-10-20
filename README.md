@@ -1,34 +1,40 @@
 # SRO.TextEditor
 
+Simple but effective text code editor/viewer for SRO.
+
 ## Features :
 - Search by Codename, Exact text, or Similar text
 - Add new text or update it
 - Text preview in different modes (support images)
-- Quick translator
+- Beautify / Minify included
+- Quick and free translator
 
 ## Preview :
+
 [![Watch the video](https://img.youtube.com/vi/vVx13nP69V0/default.jpg)](https://youtu.be/vVx13nP69V0)
 
-## Database
-Yes, has been included a database with all the texts taken from official clients (iSRO, trSRO, jSRO,..), and some translated with proper translators or filled to mimic consistency.
-Feel free to contribute any improvement, as you may find translations are not perfect if the context is too short.
+## Database :
 
-### Languages:
-- Korean (kr)
-- Chinese (zn_CN)
-- Deutch (de)
-- Japanese (ja)
-- English (en)
-- Portuguese (pt_BR)
-- French (fr)
-- Russian (ru)
-- Turkish (tr)
-- Spanish (es)
-- Arabic (ar)
+`SRO_TEXTDATA.bak` has been included in [releases](https://github.com/JellyBitz/SRO.TextEditor/releases), a database with texts taken from official clients (iSRO, trSRO, jSRO,..), and some translated with proper translators or filled to mimic consistency.  
+Feel free to contribute any improvement, as you may find translations are not perfect if the context is too short, plus SRO UI is not that flexible.
 
-### Import to Client
+### Languages :
 
-All those texts can be extracted with [SRO.Db2Media](https://github.com/JellyBitz/SRO.Db2Media) using the query of your preference, **example**:
+- Korean (`kr`)
+- Chinese (`zn_CN`)
+- Deutch (`de`)
+- Japanese (`ja`)
+- English (`en`)
+- Portuguese (`pt_BR`)
+- French (`fr`)
+- Russian (`ru`)
+- Turkish (`tr`)
+- Spanish (`es`)
+- Arabic (`ar`)
+
+### For the Client
+
+The database texts can be extracted with [SRO.Db2Media](https://github.com/JellyBitz/SRO.Db2Media) using the query of your preference, **example**:
 
 `SRO.Db2Media` > `Settings.json`
 ```json
