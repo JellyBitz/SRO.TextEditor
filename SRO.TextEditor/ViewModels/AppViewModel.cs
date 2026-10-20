@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -139,6 +140,14 @@ namespace SRO.ViewModels
         public ICommand ClearBackgroundColorCommand { get; }
         public ICommand OpenBackgroundColorPickerCommand { get; }
         /// <summary>
+        /// Code beautification for the text being edited.
+        /// </summary>
+        public ICommand BeautifyTagsCommand { get; }
+        /// <summary>
+        /// Code minification for the text being edited.
+        /// </summary>
+        public ICommand MinifyTagsCommand { get; }
+        /// <summary>
         /// Preview the text being edited.
         /// </summary>
         public ICommand PreviewCommand { get; }
@@ -227,7 +236,7 @@ namespace SRO.ViewModels
                     }
                 }
             });
-            OpenDbSettingsCommand = new RelayCommand<object>((param) =>
+            OpenDbSettingsCommand = new RelayCommand<object>((_) =>
             {
                 var window = new TextEditor.Views.DbSettings
                 {
@@ -245,7 +254,7 @@ namespace SRO.ViewModels
                     CheckDatabaseConnection();
                 }
             });
-            EditSelectedResultCommand = new RelayCommand<object>((param) =>
+            EditSelectedResultCommand = new RelayCommand<object>((_) =>
             {
                 EditingCodename = SelectedSearchResult.Codename;
                 EditingCategory = SelectedSearchResult.Category;
@@ -271,7 +280,24 @@ namespace SRO.ViewModels
 
                 EditingText = row[0][EditingLanguage] as string;
             });
-            PreviewCommand = new RelayCommand<object>((param) =>
+            BeautifyTagsCommand = new RelayCommand<object>((_) =>
+            {
+                if (EditingText.Length == 0)
+                    return;
+                var text = EditingText;
+                text = PrettyPrintTags(text, 2, new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "br", "img" });
+                text = CompactInlineElements(text);
+                EditingText = text;
+            });
+            MinifyTagsCommand = new RelayCommand<object>((_) =>
+            {
+                if (EditingText.Length == 0)
+                    return;
+                var text = EditingText;
+                text = MinifyPrintTags(text);
+                EditingText = text;
+            });
+            PreviewCommand = new RelayCommand<object>((_) =>
             {
                 if (string.IsNullOrEmpty(EditingText))
                     return;
@@ -301,7 +327,7 @@ namespace SRO.ViewModels
                 html = FixAndJoinTagAttributes(html);
                 PreviewText = html;
             });
-            OpenPk2SettingsCommand = new RelayCommand<object>((param) =>
+            OpenPk2SettingsCommand = new RelayCommand<object>((_) =>
             {
                 var window = new TextEditor.Views.Pk2Settings
                 {
@@ -317,7 +343,7 @@ namespace SRO.ViewModels
                     mSettings.Save();
                 }
             });
-            OpenTranslatorSettingsCommand = new RelayCommand<object>((param) =>
+            OpenTranslatorSettingsCommand = new RelayCommand<object>((_) =>
             {
                 var window = new TextEditor.Views.TranslatorSettings
                 {
@@ -335,7 +361,7 @@ namespace SRO.ViewModels
                     mTranslators = mTranslators.OrderBy(x => x.Name).ToList();
                 }
             });
-            TranslateCommand = new RelayCommand<object>(async (param) =>
+            TranslateCommand = new RelayCommand<object>(async (_) =>
             {
                 // Lock command execution
                 IsTranslating = true;
@@ -351,13 +377,13 @@ namespace SRO.ViewModels
 
                 // Unlock command execution
                 IsTranslating = false;
-            }, (param) =>
+            },(_) =>
             {
                 return !IsTranslating
                 && !string.IsNullOrEmpty(EditingText)
                 && !string.IsNullOrEmpty(EditingLanguage);
             });
-            UpdateCommand = new RelayCommand<object>((param) =>
+            UpdateCommand = new RelayCommand<object>((_) =>
             {
                 var db = new SQLDriver(mSettings.Host, mSettings.Login, mSettings.Password, mSettings.Database);
 
@@ -379,7 +405,7 @@ namespace SRO.ViewModels
                     new KeyValuePair<string, object>("@codename",EditingCodename),
                     new KeyValuePair<string, object>("@text",EditingText)
                 });
-            }, (param) =>
+            }, (_) =>
             {
                 return CanConnect
                 && !string.IsNullOrEmpty(EditingCodename)
@@ -707,7 +733,7 @@ namespace SRO.ViewModels
                     tbx.SelectionLength = length;
                 }));
             });
-            OpenBackgroundColorPickerCommand = new RelayCommand<object>((param) =>
+            OpenBackgroundColorPickerCommand = new RelayCommand<object>((_) =>
             {
                 var window = new TextEditor.Views.ColorPickerWindow
                 {
@@ -1233,22 +1259,14 @@ namespace SRO.ViewModels
                 using (var br = new BinaryReader(imgStream, System.Text.Encoding.ASCII))
                 {
                     if (new string(br.ReadChars(12)) == "JMXVDDJ 1000")
-                    {
                         br.BaseStream.Seek(20, SeekOrigin.Begin);
-                        // MY CODE HERE
-                    }
                     else
                     {
                         br.BaseStream.Seek(0, SeekOrigin.Begin);
                         if (new string(br.ReadChars(4)) == "DDS ")
-                        {
                             br.BaseStream.Seek(0, SeekOrigin.Begin);
-                            // MY CODE HERE
-                        }
                         else
-                        {
                             throw new NotSupportedException("File format not supported");
-                        }
                     }
                     // Convert to bitmap
                     using (IImage image = Pfimage.FromStream(imgStream))
@@ -1308,6 +1326,79 @@ namespace SRO.ViewModels
                 System.Diagnostics.Debug.WriteLine(ex);
                 return null;
             }
+        }
+        private string PrettyPrintTags(string input, int indentSize = 4, HashSet<string> ignoreTags = null)
+        {
+            // Matches tags OR text between tags
+            string pattern = @"(?<tag><(?<closing>/)?(?<name>[a-zA-Z0-9_\-]+)(?<attrs>[^>]*?)(?<selfClosing>/)?>)|(?<content>[^<]+)";
+
+            var matches = Regex.Matches(input, pattern);
+            var sb = new StringBuilder();
+            int indentLevel = 0;
+
+            foreach (Match match in matches)
+            {
+                if (match.Groups["tag"].Success)
+                {
+                    string tagName = match.Groups["name"].Value;
+                    bool isClosing = match.Groups["closing"].Success;
+                    bool isSelfClosing = match.Groups["selfClosing"].Success;
+                    if (ignoreTags != null)
+                        isSelfClosing = ignoreTags.Contains(tagName);
+
+                    // Decrease indent BEFORE writing closing tag
+                    if (isClosing)
+                        indentLevel = Math.Max(0, indentLevel - 1);
+
+                    // Append indented tag
+                    string indent = new string(' ', indentLevel * indentSize);
+                    sb.AppendLine($"{indent}{match.Value.Trim()}");
+
+                    // Increase indent AFTER writing opening tag (if not self-closing or void)
+                    if (!isClosing && !isSelfClosing)
+                    {
+                        indentLevel++;
+                    }
+                }
+                else if (match.Groups["content"].Success)
+                {
+                    string text = match.Groups["content"].Value.Trim();
+                    if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        string indent = new string(' ', indentLevel * indentSize);
+                        sb.AppendLine($"{indent}{text}");
+                    }
+                }
+            }
+
+            return sb.ToString();
+        }
+        private string CompactInlineElements(string input)
+        {
+            // Collapses tags with simple text content into a single line: <tag>text</tag>
+            return Regex.Replace(input,
+                @"<(?<name>[a-zA-Z0-9_\-]+)(?<attrs>[^>]*?)>\s*(?<content>[^<]+?)\s*</\k<name>>",
+                m => $"<{m.Groups["name"].Value}{m.Groups["attrs"].Value}>{m.Groups["content"].Value.Trim()}</{m.Groups["name"].Value}>");
+        }
+        private string MinifyPrintTags(string input)
+        {
+            // 1. Replace all sequences of newlines, tabs, and spaces with a single space
+            string result = Regex.Replace(input, @"\s+", " ");
+
+            // 2. Remove space between tags: "> <" -> "><"
+            result = Regex.Replace(result, @">\s+<", "><");
+
+            // 3. Remove space after opening tag brackets: "< div" -> "<div"
+            result = Regex.Replace(result, @"<\s+", "<");
+
+            // 4. Remove space before closing tag brackets: "</div >" -> "</div>" or "/>"
+            result = Regex.Replace(result, @"\s+/>", "/>");
+            result = Regex.Replace(result, @"\s+>", ">");
+
+            // 5. Trim leading and trailing spaces around text inside tags
+            result = Regex.Replace(result, @">\s+(?<content>[^<]+?)\s+<", ">${content}<");
+
+            return result.Trim();
         }
         #endregion
     }
