@@ -830,7 +830,11 @@ namespace SRO.ViewModels
         {
             var db = new SQLDriver(mSettings.Host, mSettings.Login, mSettings.Password, mSettings.Database);
 
-            CanConnect = db.CanConnect();
+            // Quick check to avoid empty loading times
+            if (string.IsNullOrEmpty(mSettings.Host))
+                CanConnect = false;
+            else
+                CanConnect = db.CanConnect();
 
             // Save current selection
             var editingCategory = EditingCategory;

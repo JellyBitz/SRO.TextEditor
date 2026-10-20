@@ -11,9 +11,9 @@ namespace SRO.ViewModels
     public class SettingsViewModel : BaseViewModel
     {
         #region Private Members
-        private string mHost = ".\\VSRO_TESTIN";
-        private string mLogin = "admin";
-        private string mPassword = "123123123";
+        private string mHost = string.Empty;
+        private string mLogin = string.Empty;
+        private string mPassword = string.Empty;
         private string mDatabase = "SRO_TEXTDATA";
         private bool mUseEnglishSourceLang;
         private string mMediaPath = string.Empty;
