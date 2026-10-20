@@ -393,7 +393,7 @@
                     </Button>
 
                     <!-- Preview -->
-                    <StackPanel Grid.Column="7" Margin="3 0 0 0"
+                    <StackPanel Grid.Column="6" Margin="3 0 0 0"
                                 Orientation="Horizontal">
                         <Button Content="Preview"
                                 hc:IconElement.Geometry="{StaticResource icon-file-view}"
@@ -407,7 +407,7 @@
                     </StackPanel>
                     
                     <!-- Translate -->
-                    <StackPanel Grid.Column="8" Margin="3 0 0 0"
+                    <StackPanel Grid.Column="7" Margin="3 0 0 0"
                                 Orientation="Horizontal">
                         <Button ToolTip="Translate"
                                 hc:IconElement.Geometry="{StaticResource icon-translate}"
@@ -422,7 +422,7 @@
                     </StackPanel>
                     
                     <!-- Update -->
-                    <Button Grid.Column="9" Margin="10 0 0 0"
+                    <Button Grid.Column="8" Margin="10 0 0 0"
                             Style="{StaticResource ButtonPrimary}"
                             Content="Update"
                             hc:IconElement.Geometry="{StaticResource icon-database-sync}"
