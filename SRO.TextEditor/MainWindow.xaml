@@ -364,7 +364,22 @@
                                     Focusable="False"/>
                         </StackPanel>
                     </StackPanel>
-                    
+
+                    <!-- Images -->
+                    <Button Grid.Column="3" Margin="3 0 0 0"
+                            ToolTip="Image"
+                            hc:IconElement.Geometry="{StaticResource icon-format-image}"
+                            Focusable="False">
+                        <Button.InputBindings>
+                            <MouseBinding MouseAction="LeftClick"
+                                          Command="{Binding MakeImageSourceCommand}"
+                                          CommandParameter="{Binding ElementName=tbxEditor}"/>
+                            <MouseBinding MouseAction="RightClick"
+                                          Command="{Binding ClearImageSourceCommand}"
+                                          CommandParameter="{Binding ElementName=tbxEditor}"/>
+                        </Button.InputBindings>
+                    </Button>
+
                     <!-- Beautify / Minify -->
                     <Button Grid.Column="5"
                             ToolTip="Beautify / Minify"
@@ -378,7 +393,7 @@
                     </Button>
 
                     <!-- Preview -->
-                    <StackPanel Grid.Column="6" Margin="3 0 0 0"
+                    <StackPanel Grid.Column="7" Margin="3 0 0 0"
                                 Orientation="Horizontal">
                         <Button Content="Preview"
                                 hc:IconElement.Geometry="{StaticResource icon-file-view}"
@@ -392,7 +407,7 @@
                     </StackPanel>
                     
                     <!-- Translate -->
-                    <StackPanel Grid.Column="7" Margin="3 0 0 0"
+                    <StackPanel Grid.Column="8" Margin="3 0 0 0"
                                 Orientation="Horizontal">
                         <Button ToolTip="Translate"
                                 hc:IconElement.Geometry="{StaticResource icon-translate}"
@@ -407,7 +422,7 @@
                     </StackPanel>
                     
                     <!-- Update -->
-                    <Button Grid.Column="8" Margin="10 0 0 0"
+                    <Button Grid.Column="9" Margin="10 0 0 0"
                             Style="{StaticResource ButtonPrimary}"
                             Content="Update"
                             hc:IconElement.Geometry="{StaticResource icon-database-sync}"
@@ -449,38 +464,14 @@
                                                   local:HtmlPanelImageResolverProperty.Value="{Binding LoadImageCommand}"
                                                   Background="Transparent"
                                                   BaseStylesheet="
-                                                  body {
-                                                    color: #fff;
-                                                    font-size: 16px;
-                                                    font-family: Arial, sans-serif;
-                                                    white-space: pre-wrap;
-                                                  }
-                                                  sml2 {
-                                                    white-space: none;
-                                                  }
-                                                  p {
-                                                    margin-top: 6px;
-                                                    margin-bottom: 6px;
-                                                  }
-                                                  font {
-                                                    
-                                                  }
-                                                  img {
-                                                    display:block;
-                                                    margin-bottom:10px;
-                                                  }
-                                                  center {
-                                                    display:block;
-                                                    text-align: center;
-                                                  }
-                                                  right {
-                                                    display:block;
-                                                    text-align: right;
-                                                  }
-                                                  left {
-                                                    display:block;
-                                                    text-align: left;
-                                                  }
+                                                  body { color: #fff; font-size: 16px; font-family: Arial, sans-serif; white-space: pre-wrap; }
+                                                  sml2 { white-space: none; }
+                                                  center { display:block; text-align: center; }
+                                                  right { display:block; text-align: right; }
+                                                  left { display:block; text-align: left; }
+                                                  p { margin-top: 6px; margin-bottom: 6px; }
+                                                  img { display:inline-block; margin-bottom:10px; }
+                                                  table, th, td { border: 0px solid ; }
                                                   ">
                                 <htmlrender:HtmlPanel.Effect>
                                     <DropShadowEffect Color="Black"
@@ -503,29 +494,16 @@
                                   VerticalScrollBarVisibility="Auto"
                                   Margin="28 46 28 45">
                         <htmlrender:HtmlPanel Text="{Binding PreviewText}"
+                                              local:HtmlPanelImageResolverProperty.Value="{Binding LoadImageCommand}"
                                               Background="Transparent"
                                               BaseStylesheet="
-                                              body {
-                                                color: #000;
-                                                font-family: Arial;
-                                                font-size: 12px;
-                                                line-height: 12px;
-                                              }
-                                              br {
-                                                margin-top: 0px;
-                                                margin-bottom: 0px;
-                                              }
-                                              strong {
-                                                font-weight: 13px;
-                                              }
-                                              right {
-                                                display: block;
-                                                text-align: right;
-                                              }
-                                              left {
-                                                display: block;
-                                                text-align: left;
-                                              }
+                                              body { color: #000; font-family: Arial; font-size: 12px; line-height: 12px; }
+                                              center { display:block; text-align: center; }
+                                              right { display:block; text-align: right; }
+                                              left { display:block; text-align: left; }
+                                              br { margin-top: 0px; margin-bottom: 0px; }
+                                              strong { font-weight: 13px; }
+                                              img { display:inline-block; margin-bottom:10px; }
                                               "/>
                     </ScrollViewer>
                 </Border>

@@ -159,16 +159,21 @@
     <Compile Include="Resources\submodules\SRO.PK2API\SRO.PK2API\SRO.PK2API\Pk2File.cs" />
     <Compile Include="Resources\submodules\SRO.PK2API\SRO.PK2API\SRO.PK2API\Pk2Folder.cs" />
     <Compile Include="Resources\submodules\SRO.PK2API\SRO.PK2API\SRO.PK2API\Pk2Stream.cs" />
+    <Compile Include="Utils\Pk2StreamHelpers.cs" />
     <Compile Include="ValueConverters\BaseValueConverter.cs" />
     <Compile Include="ValueConverters\BooleanToVisibilityConverter.cs" />
     <Compile Include="ValueConverters\ColorToBrushConverter.cs" />
     <Compile Include="ValueConverters\IndexToVisibilityConverter.cs" />
+    <Compile Include="ViewModels\ImagePickerViewModel.cs" />
     <Compile Include="ViewModels\ColorPickerViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />
     <Compile Include="ViewModels\AppViewModel.cs" />
     <Compile Include="ViewModels\Base\BaseViewModel.cs" />
     <Compile Include="ViewModels\Base\ExpressionHelpers.cs" />
     <Compile Include="ViewModels\Base\RelayCommand.cs" />
+    <Compile Include="Views\ImagePickerWindow.xaml.cs">
+      <DependentUpon>ImagePickerWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\ColorPickerWindow.xaml.cs">
       <DependentUpon>ColorPickerWindow.xaml</DependentUpon>
     </Compile>
@@ -202,6 +207,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Styles\Scroll.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\ImagePickerWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

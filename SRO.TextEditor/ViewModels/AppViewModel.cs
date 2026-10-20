@@ -1,16 +1,13 @@
-﻿using Pfim;
-using SRO.PK2API;
+﻿using SRO.PK2API;
 using SRO.TextEditor.Models;
+using SRO.TextEditor.Utils;
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -139,6 +136,8 @@ namespace SRO.ViewModels
         public ICommand MakeBackgroundColorCommand { get; }
         public ICommand ClearBackgroundColorCommand { get; }
         public ICommand OpenBackgroundColorPickerCommand { get; }
+        public ICommand MakeImageSourceCommand { get; }
+        public ICommand ClearImageSourceCommand { get; }
         /// <summary>
         /// Code beautification for the text being edited.
         /// </summary>
@@ -155,7 +154,10 @@ namespace SRO.ViewModels
         /// Opens the Pk2 settings window.
         /// </summary>
         public ICommand OpenPk2SettingsCommand { get; }
-        public Func<string, BitmapImage> LoadImageCommand => LoadMediaPK2Image;
+        /// <summary>
+        /// Loads an image from pk2 if has been loaded and if has been found.
+        /// </summary>
+        public Func<string, BitmapImage> LoadImageCommand => (path) => { return GetPk2Stream()?.GetBitmapImage(path); };
         /// <summary>
         /// Translate the text being edited into the language selected.
         /// </summary>
@@ -299,13 +301,13 @@ namespace SRO.ViewModels
             });
             PreviewCommand = new RelayCommand<object>((_) =>
             {
-                if (string.IsNullOrEmpty(EditingText))
+                if (EditingText == null)
                     return;
 
                 var html = EditingText;
                 // Plain text detected
                 if (!html.ToLowerInvariant().StartsWith("<sml2>"))
-                    html += "<br>";
+                    html += "<br>"; // Fix buggy renderer
                 // <sml2>, "\n" are worthless but visually
                 else
                     html = html.Replace("\r\n", "").Replace("\n","");
@@ -744,10 +746,62 @@ namespace SRO.ViewModels
                 bool? result = window.ShowDialog();
                 if (result == true)
                 {
-                    // Update settings
+                    // Update value
                     var ctx = window.DataContext as ColorPickerViewModel;
                     SelectedBackgroundColor = ctx.SelectedColor;
                 }
+            });
+            MakeImageSourceCommand = new RelayCommand<TextBox>((tbx) =>
+            {
+                // Check if pk2 can be loaded
+                var pk2 = GetPk2Stream();
+                if (pk2 == null)
+                    return;
+                // Open dialog
+                var window = new TextEditor.Views.ImagePickerWindow
+                {
+                    Title = $"{info.ProductName} - Image Picker",
+                    Owner = System.Windows.Application.Current.MainWindow,
+                    DataContext = new ImagePickerViewModel(pk2),
+                };
+                bool? result = window.ShowDialog();
+                if (result != true)
+                    return;
+                // Make sure the path has been selected
+                var ctx = window.DataContext as ImagePickerViewModel;
+                if (string.IsNullOrEmpty(ctx.SelectedPath))
+                    return;
+                // Check if required
+                int start = tbx.SelectionStart;
+                string text = EditingText;
+                AddSML2Tag(ref start, ref text);
+                // Add tag
+                var tag = $"<img src=\"{ctx.SelectedPath}\" width=\"{ctx.SelectedImageWidth}\" height=\"{ctx.SelectedImageHeight}\">";
+                EditingText = text.Substring(0, start) + tag + text.Substring(start);
+                // Avoid focus flickering
+                tbx.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() =>
+                {
+                    tbx.Focus();
+                    tbx.SelectionStart = start;
+                }));
+            });
+            ClearImageSourceCommand = new RelayCommand<TextBox>((tbx) =>
+            {
+                int start = tbx.SelectionStart;
+                int length = tbx.SelectionLength;
+                string text = tbx.Text;
+                // Delete from selection ONLY
+                if (length == 0)
+                    return;
+                RemoveTagInSelection(ref start, ref length, ref text, "img");
+                EditingText = text;
+                // Avoid focus flickering
+                tbx.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() =>
+                {
+                    tbx.Focus();
+                    tbx.SelectionStart = start;
+                    tbx.SelectionLength = length;
+                }));
             });
 
             // Make some commands to change their executing status
@@ -849,10 +903,11 @@ namespace SRO.ViewModels
         }
         private void AddSML2Tag(ref int start, ref string text)
         {
-            if (!text.StartsWith("<sml2>"))
+            if (!text.ToLowerInvariant().StartsWith("<sml2>"))
             {
-                text = "<sml2>\n" + text + "\n</sml2>";
-                start += "<sml2>\n".Length;
+                var openTag = "<sml2>\n";
+                text = openTag + text + "\n</sml2>";
+                start += openTag.Length;
             }
         }
         private void RemoveEnclosingTagsAroundCursor(ref int selectionStart,ref string text, string openTag, string closeTag)
@@ -1231,101 +1286,27 @@ namespace SRO.ViewModels
             }, RegexOptions.IgnoreCase | RegexOptions.Singleline);
         }
         /// <summary>
-        /// Loads image from media.pk2 path.
+        /// Get the current pk2 being used, try to load/refresh pk2 stream if his path or key has changed recently.
         /// </summary>
-        private BitmapImage LoadMediaPK2Image(string path)
+        private Pk2Stream GetPk2Stream()
         {
-            // Make sure the path has been set
-            if (string.IsNullOrEmpty(mSettings.MediaPath) || !File.Exists(mSettings.MediaPath))
-                return null;
-
-            // Open pk2 file and try to get the file
             try
             {
-                // Open or reopen on read only mode if something changed
-                if(mPk2 == null || mPk2Path != mSettings.MediaPath ||mPk2Key != mSettings.MediaKey)
+                // Check if path or key changed to load a new pk2
+                if (mPk2 == null || mPk2Path != mSettings.MediaPath || mPk2Key != mSettings.MediaKey)
                 {
                     mPk2?.Dispose();
                     mPk2 = new Pk2Stream(mSettings.MediaPath, mSettings.MediaKey, true);
                     mPk2Path = mSettings.MediaPath;
                     mPk2Key = mSettings.MediaKey;
                 }
-                var file = mPk2.GetFile(path);
-                if (file == null)
-                    throw new FileNotFoundException($"File not found {path}");
-                MemoryStream imgStream = new MemoryStream(file.GetContent());
-                // Open media.pk2 and get file stream
-                // Check if file from path is .dds or .ddj
-                using (var br = new BinaryReader(imgStream, System.Text.Encoding.ASCII))
-                {
-                    if (new string(br.ReadChars(12)) == "JMXVDDJ 1000")
-                        br.BaseStream.Seek(20, SeekOrigin.Begin);
-                    else
-                    {
-                        br.BaseStream.Seek(0, SeekOrigin.Begin);
-                        if (new string(br.ReadChars(4)) == "DDS ")
-                            br.BaseStream.Seek(0, SeekOrigin.Begin);
-                        else
-                            throw new NotSupportedException("File format not supported");
-                    }
-                    // Convert to bitmap
-                    using (IImage image = Pfimage.FromStream(imgStream))
-                    {
-                        // Find pixel format being use, covering just DXT1~DXT5
-                        var pixelFormat = System.Drawing.Imaging.PixelFormat.Undefined;
-                        var rawData = image.Data;
-                        var stride = image.Stride;
-                        switch (image.Format)
-                        {
-                            case Pfim.ImageFormat.Rgb24:
-                                pixelFormat = System.Drawing.Imaging.PixelFormat.Format24bppRgb;
-                                break;
-                            case Pfim.ImageFormat.Rgba32:
-                                pixelFormat = System.Drawing.Imaging.PixelFormat.Format32bppArgb;
-                                break;
-                            case Pfim.ImageFormat.R5g6b5:
-                                pixelFormat = System.Drawing.Imaging.PixelFormat.Format16bppRgb565;
-                                break;
-                            case Pfim.ImageFormat.R5g5b5a1:
-                                pixelFormat = System.Drawing.Imaging.PixelFormat.Format16bppArgb1555;
-                                break;
-                            default:
-                                throw new NotSupportedException($"DDS format not supported [{image.Format}]");
-                        }
-                        // Create bitmap
-                        using (var bitmap = new System.Drawing.Bitmap(image.Width, image.Height, pixelFormat))
-                        {
-                            System.Drawing.Imaging.BitmapData rectData = bitmap.LockBits(
-                                new System.Drawing.Rectangle(0, 0, image.Width, image.Height),
-                                System.Drawing.Imaging.ImageLockMode.WriteOnly,
-                                pixelFormat
-                            );
-                            // Copy Pfim's buffer straight into System.Drawing's allocated memory
-                            Marshal.Copy(image.Data, 0, rectData.Scan0, image.Data.Length);
-                            // Unlock and get it
-                            bitmap.UnlockBits(rectData);
-                            using (var memoryStream = new MemoryStream())
-                            {
-                                bitmap.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Bmp);
-                                memoryStream.Position = 0;
-
-                                var bitmapImage = new BitmapImage();
-                                bitmapImage.BeginInit();
-                                bitmapImage.CacheOption = BitmapCacheOption.OnLoad; // Fully loads data into memory
-                                bitmapImage.StreamSource = memoryStream;
-                                bitmapImage.EndInit();
-                                bitmapImage.Freeze(); // Makes it thread-safe for the UI thread
-                                return bitmapImage;
-                            }
-                        }
-                    }
-                }
+                return mPk2;
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine(ex);
-                return null;
             }
+            return null;
         }
         private string PrettyPrintTags(string input, int indentSize = 4, HashSet<string> ignoreTags = null)
         {

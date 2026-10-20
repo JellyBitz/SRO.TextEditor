@@ -1,0 +1,134 @@
+﻿<hc:Window x:Class="SRO.TextEditor.Views.ImagePickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        xmlns:local="clr-namespace:SRO.TextEditor"
+        xmlns:vm="clr-namespace:SRO.ViewModels"
+        mc:Ignorable="d"
+        Width="800" Height="480"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        ShowInTaskbar="False">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <!-- Settings layout -->
+            <RowDefinition/>
+
+            <!-- Save / Cancel-->
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- List / Preview -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Icon list -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <!-- Filter -->
+                <hc:SearchBar Grid.Row="0"
+                              Style="{StaticResource SearchBarPlus}"
+                              hc:InfoElement.Placeholder="Search . . ."
+                              Command="{Binding SearchCommand}"
+                              CommandParameter="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                <!-- List -->
+                <DataGrid Grid.Row="1"
+                          Style="{StaticResource DataGridBaseStyle}"
+                          RowStyle="{StaticResource DataGridRowStyle.Small}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          RowHeight="25"
+                          HeadersVisibility="All"
+                          CanUserSortColumns="False"
+                          GridLinesVisibility="None"
+                          SelectionMode="Single"
+                          ItemsSource="{Binding ImagePaths}"
+                          SelectedItem="{Binding SelectedPath, Mode=TwoWay}"
+                          HorizontalScrollBarVisibility="Disabled"
+                          CanUserReorderColumns="False"
+                          Padding="0">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="Icons"
+                                IsReadOnly="True">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+
+            <!-- Preview -->
+            <Grid Grid.Column="1" Margin="10 0 0 0">
+                <Grid.RowDefinitions>
+                    <!-- Details -->
+                    <RowDefinition Height="auto"/>
+                    <!-- Image -->
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <!-- Details -->
+                <Grid Grid.Row="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0"
+                                Orientation="Horizontal">
+                        <TextBlock Text="Width : "/>
+                        <TextBlock Text="{Binding SelectedImageWidth}"/>
+                        <TextBlock Text=" px"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1"
+                                Orientation="Horizontal">
+                        <TextBlock Text="Height : "/>
+                        <TextBlock Text="{Binding SelectedImageHeight}"/>
+                        <TextBlock Text=" px"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="2"
+                                Orientation="Horizontal">
+                        <TextBlock Text="Size : "/>
+                        <TextBlock Text="{Binding SelectedImageSize}"/>
+                    </StackPanel>
+                </Grid>
+
+                <ScrollViewer Grid.Row="1" MaxWidth="400"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Auto">
+                    <!-- Image -->
+                    <Image
+                           Source="{Binding SelectedImage}"
+                           Width="{Binding SelectedImageWidth}"
+                           Height="{Binding SelectedImageHeight}"/>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+
+        <!-- Save / Cancel -->
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    Margin="0 10 0 5">
+            <Button Style="{StaticResource ButtonPrimary}"
+                    Content="Select"
+                    Click="OnAccept"/>
+            <Button Style="{StaticResource ButtonDefault}"
+                    Margin="20 0 0 0"
+                    Content="Cancel"
+                    Click="OnCancel"/>
+        </StackPanel>
+    </Grid>
+</hc:Window>
