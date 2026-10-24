@@ -93,19 +93,24 @@
                       Margin="0 5"
                       Padding="0">
                 <DataGrid.Columns>
+                    <!-- Service -->
+                    <DataGridTemplateColumn Header="Service"
+                                            IsReadOnly="True"
+                                            MinWidth="62">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding Service}"
+                                          Command="{Binding DataContext.EditSelectedResultServiceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <!-- ID -->
                     <DataGridTemplateColumn Header="ID"
                                             IsReadOnly="True"
-                                            Width="65">
+                                            MinWidth="60">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding Id}">
-                                    <TextBlock.InputBindings>
-                                        <!-- Quick edit this -->
-                                        <MouseBinding Gesture="RightDoubleClick"
-                                                      Command="{Binding DataContext.EditSelectedResultCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
-                                    </TextBlock.InputBindings>
-                                </TextBlock>
+                                <TextBlock Text="{Binding Id}"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -115,34 +120,22 @@
                                             Width="*">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding Codename}">
-                                    <TextBlock.InputBindings>
-                                        <!-- Quick edit this -->
-                                        <MouseBinding Gesture="RightDoubleClick"
-                                                      Command="{Binding DataContext.EditSelectedResultCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
-                                    </TextBlock.InputBindings>
-                                </TextBlock>
+                                <TextBlock Text="{Binding Codename}"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                     <!-- Category -->
                     <DataGridTemplateColumn Header="Category"
                                             IsReadOnly="True"
-                                            Width="160">
+                                            MinWidth="120">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding Category}">
-                                    <TextBlock.InputBindings>
-                                        <!-- Quick edit this -->
-                                        <MouseBinding Gesture="RightDoubleClick"
-                                                      Command="{Binding DataContext.EditSelectedResultCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
-                                    </TextBlock.InputBindings>
-                                </TextBlock>
+                                <TextBlock Text="{Binding Category}"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                     <!-- Edit this -->
-                    <DataGridTemplateColumn Width="40" Header="">
+                    <DataGridTemplateColumn MinWidth="44" Header="">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Button Style="{StaticResource ButtonIcon}"

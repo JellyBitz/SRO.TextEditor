@@ -117,6 +117,10 @@ namespace SRO.ViewModels
         /// </summary>
         public ICommand OpenDbSettingsCommand { get; }
         /// <summary>
+        /// Edits service status of the selected result in list.
+        /// </summary>
+        public ICommand EditSelectedResultServiceCommand { get; }
+        /// <summary>
         /// Starts editing the selected result from searching list.
         /// </summary>
         public ICommand EditSelectedResultCommand { get; }
@@ -205,16 +209,16 @@ namespace SRO.ViewModels
                     {
                         default:
                         case SearchType.Codename:
-                            unsafeQuery = $"SELECT ID, Codename FROM [{table}] WHERE Codename LIKE '%' + @value + '%'";
+                            unsafeQuery = $"SELECT SERVICE, ID, Codename FROM [{table}] WHERE Codename LIKE '%' + @value + '%'";
                             break;
                         case SearchType.SimilarText:
-                            unsafeQuery = $"SELECT ID, Codename FROM [{table}] WHERE ";
+                            unsafeQuery = $"SELECT SERVICE, ID, Codename FROM [{table}] WHERE ";
                             foreach (var lang in Languages)
                                 unsafeQuery += $"{lang} LIKE '%' + @value + '%' OR ";
                             unsafeQuery = unsafeQuery.Remove(unsafeQuery.Length - 3); // Remove last "OR "
                             break;
                         case SearchType.ExactText:
-                            unsafeQuery = $"SELECT ID, Codename FROM [{table}] WHERE ";
+                            unsafeQuery = $"SELECT SERVICE, ID, Codename FROM [{table}] WHERE ";
                             foreach (var lang in Languages)
                                 unsafeQuery += $"{lang} = @value OR ";
                             unsafeQuery = unsafeQuery.Remove(unsafeQuery.Length - 3); // Remove last "OR "
@@ -230,6 +234,7 @@ namespace SRO.ViewModels
                     {
                         var result = new SearchResult()
                         {
+                            Service = ((int)r["SERVICE"]) == 1,
                             Id = (int)r["ID"],
                             Codename = r["Codename"] as string,
                             Category = table,
@@ -255,6 +260,20 @@ namespace SRO.ViewModels
                     mSettings.Save();
                     CheckDatabaseConnection();
                 }
+            });
+            EditSelectedResultServiceCommand = new RelayCommand<object>((_) =>
+            {
+                bool service = !SelectedSearchResult.Service;
+                // Update immediatly
+                var unsafeQuery = $"UPDATE [{SelectedSearchResult.Category}] SET [Service] = @service WHERE ID = @id";
+                var db = new SQLDriver(mSettings.Host, mSettings.Login, mSettings.Password, mSettings.Database);
+                var row = db.ExecuteQuery(unsafeQuery, new KeyValuePair<string, object>[]
+                {
+                        new KeyValuePair<string, object>("@service",service?1:0),
+                        new KeyValuePair<string, object>("@id",SelectedSearchResult.Id),
+                });
+                // Update UI
+                SelectedSearchResult.Service = service;
             });
             EditSelectedResultCommand = new RelayCommand<object>((_) =>
             {
@@ -855,10 +874,10 @@ namespace SRO.ViewModels
                         // Ignore repeated ones
                         if (Languages.Contains(lang))
                             continue;
-                        // Filter id and codename
-                        if (lang.ToLowerInvariant() == "id" || lang.ToLowerInvariant() == "codename")
+                        // Avoid some columns
+                        var column = lang.ToLowerInvariant();
+                        if (column == "service" || column == "id" || column == "codename")
                             continue;
-
                         Languages.Add(lang);
                     }
                 }
