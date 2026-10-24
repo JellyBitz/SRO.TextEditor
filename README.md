@@ -11,11 +11,14 @@ Simple but effective text code editor/viewer for SRO.
 
 ## Preview :
 
-<div align="left">
-      <a href="https://www.youtube.com/watch?v=vVx13nP69V0">
-         <img src="https://i.ytimg.com/vi/vVx13nP69V0/maxresdefault.jpg" style="width:100%;">
-      </a>
-</div>
+<details>
+      <summary>Click here to show images</summary>
+      <br>
+      <img width="1280" height="720" alt="preview_01" src="https://github.com/user-attachments/assets/c6714ca1-9513-4e42-a673-77d7a350efe3" />
+      <img width="1280" height="720" alt="preview_02" src="https://github.com/user-attachments/assets/91a626d9-ec88-405b-9626-f7de7da9f4df" />
+      <img width="1280" height="720" alt="preview_03" src="https://github.com/user-attachments/assets/410b09d6-238e-4749-a04e-39eec29bb509" />
+</details>
+
 
 ## Database :
 
